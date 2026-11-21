@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Where Points Go</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #F6F1E7; --paper-2: #EFE8D9; --ink: #1D2433; --ink-2: #4A5262; --muted: #7C8494; --rule: #DCD3C2;
+  --sea: #2B5672; --natural: #C98A00; --ship: #C8442A; --good: #1A8A6A;
+  --serif: "Newsreader", Georgia, serif; --sans: "Libre Franklin", "Helvetica Neue", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --paper: #161A22; --paper-2: #1F2430; --ink: #ECE6DA; --ink-2: #B9B2A5; --muted: #8A8F9A; --rule: #2E3442; --sea: #5A93B8; }
+}
+:root[data-theme="dark"] { --paper: #161A22; --paper-2: #1F2430; --ink: #ECE6DA; --ink-2: #B9B2A5; --muted: #8A8F9A; --rule: #2E3442; --sea: #5A93B8; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--serif); font-size: 19px; line-height: 1.55; }
+.col { max-width: 860px; margin: 0 auto; padding: 0 16px; }
+h1 { font-weight: 500; font-size: clamp(34px, 6vw, 56px); line-height: 1.05; margin: 56px 0 12px; letter-spacing: -.02em; }
+h2 { font-weight: 500; font-size: clamp(25px, 3.6vw, 32px); margin: 0 0 8px; line-height: 1.15; }
+.step { font: 700 12px var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--ship); margin-bottom: 8px; }
+.dek { color: var(--ink-2); font-style: italic; margin: 0 0 8px; }
+section { border-top: 1px solid var(--rule); padding: 34px 0 38px; }
+p { margin: 0 0 14px; color: var(--ink-2); }
+p b { color: var(--ink); font-weight: 600; }
+.sans { font-family: var(--sans); }
+canvas { display: block; border-radius: 4px; background: var(--paper-2); }
+.row { display: flex; gap: 22px; flex-wrap: wrap; align-items: flex-start; }
+.mini { font-family: var(--sans); font-size: 13px; color: var(--muted); }
+/* concept 2: energy slider */
+.mixer { background: var(--paper-2); border-radius: 10px; padding: 18px; font-family: var(--sans); font-size: 14px; }
+.mixer label { display: grid; grid-template-columns: 120px 1fr 64px; gap: 12px; align-items: center; margin-bottom: 10px; }
+.mixer input { width: 100%; }
+.bar { height: 30px; border-radius: 6px; overflow: hidden; display: flex; margin-top: 8px; }
+.bar div { height: 100%; transition: width .15s; }
+.big { font: 600 28px var(--sans); color: var(--ink); }
+/* kinds */
+.kinds { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+@media (max-width: 760px) { .kinds { grid-template-columns: repeat(2, 1fr); } }
+.kind canvas { width: 100%; aspect-ratio: 15 / 13; }
+.kind h3 { font: 600 13px var(--sans); margin: 8px 0 4px; color: var(--ink); line-height: 1.3; }
+.kind .mini b { color: var(--ink); }
+/* points chart */
+.toggle { font-family: var(--sans); font-size: 13px; display: inline-flex; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; margin-bottom: 16px; }
+.toggle button { border: 0; background: transparent; color: var(--ink-2); padding: 8px 14px; font: 600 13px var(--sans); cursor: pointer; }
+.toggle button.on { background: var(--ink); color: var(--paper); }
+.pts { font-family: var(--sans); font-size: 14px; }
+.pts .r { display: grid; grid-template-columns: 210px 1fr; gap: 14px; align-items: center; margin-bottom: 14px; }
+@media (max-width: 600px) { .pts .r { grid-template-columns: 1fr; gap: 4px; } }
+.pts .name { color: var(--ink); font-weight: 600; line-height: 1.25; }
+.pts .lines div { height: 14px; border-radius: 3px; margin: 3px 0; display: flex; align-items: center; transition: width .3s; }
+.pts .lines span { font-size: 12px; margin-left: calc(100% + 8px); white-space: nowrap; color: var(--ink-2); }
+.legend { font-family: var(--sans); font-size: 13px; color: var(--muted); display: flex; gap: 18px; margin-bottom: 12px; flex-wrap: wrap; }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 6px; }
+/* problems */
+.prob { border: 1px solid var(--rule); border-radius: 10px; padding: 18px 20px; margin-bottom: 14px; }
+.prob h3 { font-weight: 500; font-size: 23px; margin: 0 0 6px; }
+.prob .tag { font: 700 12px var(--sans); color: var(--ship); letter-spacing: .08em; text-transform: uppercase; }
+.prob p { margin: 0 0 8px; }
+.prob .try { font-family: var(--sans); font-size: 14px; color: var(--ink); }
+.board { font-family: var(--sans); font-size: 14px; position: relative; height: 96px; margin: 24px 0 8px; }
+.board .pin.up { top: 1px; } .board .pin.up i { margin-top: 2px; }
+.board .axis { position: absolute; left: 0; right: 0; top: 30px; height: 2px; background: var(--rule); }
+.board .pin { position: absolute; top: 18px; transform: translateX(-50%); text-align: center; }
+.board .pin i { display: block; width: 12px; height: 12px; border-radius: 50%; margin: 6px auto 6px; }
+.scene { width: 100%; max-width: 520px; aspect-ratio: 520 / 320; touch-action: none; cursor: grab; }
+.scene.drag { cursor: grabbing; }
+.props { font-family: var(--sans); font-size: 14px; display: grid; grid-template-columns: 1fr auto; gap: 6px 14px; margin-top: 10px; }
+.props b { font-weight: 600; text-align: right; }
+.btn { margin-top: 12px; padding: 9px 14px; border-radius: 6px; border: 1px solid var(--rule); background: var(--paper); color: var(--ink); font: 600 13px var(--sans); cursor: pointer; }
+footer { font-family: var(--sans); font-size: 13px; color: var(--muted); padding: 30px 0 60px; border-top: 1px solid var(--rule); }
+</style>
+</head>
+<body>
+<div class="col">
+  <h1>Where our points go</h1>
+  <p class="dek">The vessel-noise problem, broken into pieces you can see, and ranked by how much each one costs us.</p>
+
+  <section>
+    <div class="step">Concept 1</div>
+    <h2>One window is a 15 × 25 picture of loudness</h2>
+    <p>Each test row is 15 minutes of underwater sound. For every minute we get the loudness of 25 pitch ranges, from a low <b>32 Hz</b> rumble to a high <b>7.9 kHz</b> hiss. Draw it as a grid: time runs left to right, pitch runs bottom to top, and brighter means louder.</p>
+    <div class="row"><canvas id="one" width="300" height="260" style="width:300px;max-width:100%"></canvas>
+      <p class="mini" style="max-width:360px">This one has a loud added ship. You can see the bright band in the low pitches (bottom) where the ship rumbles. That's all the information we get: no actual sound, just these 375 numbers.</p></div>
+  </section>
+
+  <section>
+    <div class="step">Try it</div>
+    <h2>Add a ship yourself</h2>
+    <p>This grid starts as plain sea with no ship. Use the sliders to send a ship past and watch the grid change. Brightness here is fixed to the sea's level, so a louder ship really does look brighter.</p>
+    <div class="row">
+      <canvas id="play" width="300" height="260" style="width:300px;max-width:100%"></canvas>
+      <div class="mixer" style="flex:1;min-width:260px">
+        <label>Loudness <input id="pL" type="range" min="-30" max="15" value="5"><span id="pLv"></span></label>
+        <label>Closest at <input id="pT" type="range" min="0" max="14" value="7"><span id="pTv"></span></label>
+        <label>Pass length <input id="pW" type="range" min="1" max="15" value="3"><span id="pWv"></span></label>
+        <label>Pitch <input id="pP" type="range" min="0" max="10" value="3"><span id="pPv"></span></label>
+        <label style="grid-template-columns:auto 1fr;gap:8px"><input id="red" type="checkbox" checked style="width:auto"> Tint squares red by how much of them is ship</label>
+        <div style="margin-top:6px">Ship's share of the energy: <span class="big" id="pS"></span></div>
+        <div class="mini" style="margin-top:6px">Loudness is the ship's total energy compared to the sea's. 0 dB means equal, so the share is 50%.</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="step">Try it, part 2</div>
+    <h2>Drag the ship past the sensor</h2>
+    <p>Top view of the sea. The dot in the middle is the underwater microphone. <b>Drag the ship</b>: it sails left to right, and where you drop it is where it is at minute 8. The dashed line is its path over the 15 minutes. The grid on the right is what the microphone records.</p>
+    <div class="row">
+      <div style="flex:1;min-width:280px;max-width:520px">
+        <canvas id="scene" class="scene" width="520" height="320"></canvas>
+        <div class="mixer" style="margin-top:10px">
+          <label>Ship size <input id="sSrc" type="range" min="-20" max="30" value="-2"><span id="sSrcV"></span></label>
+          <label>Speed <input id="sSpd" type="range" min="4" max="24" value="12"><span id="sSpdV"></span></label>
+        </div>
+      </div>
+      <div>
+        <canvas id="sGrid" width="300" height="260" style="width:300px;max-width:100%"></canvas>
+        <div class="props">
+          <span>Closest distance</span><b id="pd"></b>
+          <span>Distance at minute 8</span><b id="pd8"></b>
+          <span>Loudest minute vs the sea</span><b id="pl"></b>
+          <span>High pitch lost to distance</span><b id="pa"></b>
+          <span>Ship's share of the energy</span><b id="ps" style="font-size:20px"></b>
+        </div>
+        <button class="btn" id="sPlay">Play the pass</button>
+      </div>
+    </div>
+    <p class="mini" style="margin-top:14px">Physics used: sound weakens with distance (twice as far is 6 dB quieter), and high pitches also fade faster over distance, so far ships sound deeper. Ship size is how loud the ship is 1 km away, compared to the sea.</p>
+  </section>
+
+  <section>
+    <div class="step">Concept 2</div>
+    <h2>Sounds add up as energy, not as decibels</h2>
+    <p>Loudness is measured in decibels, which are squashed: every <b>+10 dB means 10 times the energy</b>. So a ship 10 dB quieter than the sea is only about 9% of the total, and a ship as loud as the sea is 50%. Drag the sliders.</p>
+    <div class="mixer">
+      <label>Sea <input id="sea" type="range" min="80" max="120" value="100"><span id="seaV"></span></label>
+      <label>Added ship <input id="shp" type="range" min="70" max="130" value="95"><span id="shpV"></span></label>
+      <div class="bar"><div id="bSea" style="background:var(--sea)"></div><div id="bShip" style="background:var(--ship)"></div></div>
+      <div style="margin-top:10px">Ship's share of the energy: <span class="big" id="share"></span> <span class="mini">&larr; this is the number we must predict for every window</span></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="step">Concept 3</div>
+    <h2>Five kinds of window</h2>
+    <p>Every window falls into one of these. The tricky one is the second: a ship was <b>already in the recording</b>. It sounds like a ship, but it is part of the background and does not count.</p>
+    <div class="kinds" id="kinds"></div>
+  </section>
+
+  <section>
+    <div class="step">The key finding</div>
+    <h2>Where the points are lost</h2>
+    <p>Grey bar: how common each kind is. Red bar: how much of our total error it causes. A kind whose red bar is much longer than its grey bar is where we bleed points.</p>
+    <div class="toggle" id="tog"><button data-k="v8" class="on">Our best model (0.811)</button><button data-k="splitter">The splitter (0.778)</button></div>
+    <div class="legend"><span><i style="background:var(--muted)"></i>share of windows</span><span><i style="background:var(--ship)"></i>share of lost points</span></div>
+    <div class="pts" id="pts"></div>
+    <p class="mini" id="ptsNote"></p>
+  </section>
+
+  <section>
+    <div class="step">The problems, ranked</div>
+    <h2>Four problems we can work on</h2>
+    <div id="probs"></div>
+    <div class="board"><div class="axis"></div><div id="pins"></div></div>
+    <p class="mini">Public scores. Higher is better. The gap from us to 1st is 0.094.</p>
+  </section>
+
+  <footer>Built by <code>src/breakdown.py</code> from 15,000 fake windows mixed with the recipes our trusted local grader uses (held-out stations and ships). No test data is used.</footer>
+</div>
+<script>
+const D = /*DATA*/null;
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+function grid(cv, db, tint) {
+  const g = cv.getContext("2d"), W = cv.width, H = cv.height;
+  const flat = db.flat(), mx = Math.max(...flat), lo = mx - 35;
+  g.clearRect(0, 0, W, H);
+  for (let t = 0; t < 15; t++) for (let b = 0; b < 25; b++) {
+    g.globalAlpha = Math.max(0.04, Math.min(1, (db[t][b] - lo) / 35));
+    g.fillStyle = tint; g.fillRect(t * W / 15, H - (b + 1) * H / 25, W / 15 + 0.5, H / 25 + 0.5);
+  }
+  g.globalAlpha = 1;
+}
+const ex = k => D.examples.find(e => e.key === k);
+grid(document.getElementById("one"), ex("loud").db, css("--ink"));
+
+// try it: sea from a real no-ship window, plus a simple made-up ship
+const SEA = ex("empty").db.map(r => r.map(v => 10 ** (v / 10)));
+const seaTot = SEA.flat().reduce((a, b) => a + b, 0), seaMaxDb = 10 * Math.log10(Math.max(...SEA.flat()));
+function play() {
+  const L = +pL.value, T = +pT.value, W = +pW.value, P = +pP.value;
+  const ship = SEA.map((row, t) => row.map((_, b) => Math.exp(-(((t - T) / (W / 2)) ** 2)) * 10 ** (-(P / 10) * 2.5 * b / 10)));
+  const shipTot = ship.flat().reduce((a, b) => a + b, 0), k = seaTot * 10 ** (L / 10) / shipTot;
+  const db = SEA.map((row, t) => row.map((v, b) => 10 * Math.log10(v + k * ship[t][b])));
+  const cv = document.getElementById("play"), g = cv.getContext("2d"), Wc = cv.width, H = cv.height, lo = seaMaxDb - 25;
+  g.clearRect(0, 0, Wc, H);
+  for (let t = 0; t < 15; t++) for (let b = 0; b < 25; b++) {
+    const x = t * Wc / 15, y = H - (b + 1) * H / 25, part = k * ship[t][b] / (SEA[t][b] + k * ship[t][b]);
+    g.globalAlpha = Math.max(0.05, Math.min(1, (db[t][b] - lo) / 35));
+    g.fillStyle = css("--ink"); g.fillRect(x, y, Wc / 15 + 0.5, H / 25 + 0.5);
+    if (red.checked) { g.globalAlpha = part * 0.85; g.fillStyle = css("--ship"); g.fillRect(x, y, Wc / 15 + 0.5, H / 25 + 0.5); }
+  }
+  g.globalAlpha = 1;
+  const share = 10 ** (L / 10) / (1 + 10 ** (L / 10));
+  pLv.textContent = (L > 0 ? "+" : "") + L + " dB"; pTv.textContent = "min " + (T + 1);
+  pWv.textContent = W + " min"; pPv.textContent = P < 3 ? "broad" : P < 7 ? "low" : "very low";
+  pS.textContent = (share * 100).toFixed(share < 0.1 ? 1 : 0) + "%";
+}
+const [pL, pT, pW, pP] = ["pL", "pT", "pW", "pP"].map(id => document.getElementById(id));
+const [pLv, pTv, pWv, pPv, pS] = ["pLv", "pTv", "pWv", "pPv", "pS"].map(id => document.getElementById(id));
+const red = document.getElementById("red");
+[pL, pT, pW, pP, red].forEach(e => e.oninput = play); play();
+// try it, part 2: ship, sensor and a straight pass
+const KM_W = 10, KM_H = 6.15, FREQ = [...Array(25)].map((_, b) => 10 ** (1.5 + 0.1 * b) / 1000);
+const absorb = f => 0.11 * f * f / (1 + f * f) + 44 * f * f / (4100 + f * f);  // dB per km, Thorp
+const shipPos = { x: 0, y: 0.6 }, sea_t = SEA.map(r => r.reduce((a, b) => a + b, 0));
+let playMin = null;
+const sc = document.getElementById("scene"), sSrc = document.getElementById("sSrc"), sSpd = document.getElementById("sSpd");
+const toPx = (x, y) => [(x / KM_W + 0.5) * sc.width, (0.5 - y / KM_H) * sc.height];
+const track = () => [...Array(15)].map((_, t) => ({ x: shipPos.x + (t - 7) * sSpd.value * 1.852 / 60, y: shipPos.y }));
+function scene() {
+  const T = track(), r = T.map(p => Math.max(0.1, Math.hypot(p.x, p.y)));
+  const src = +sSrc.value, spec = [...Array(25)].map((_, b) => 10 ** (-0.75 * b / 10));
+  const ship = T.map((_, t) => spec.map((v, b) => v * 10 ** (-absorb(FREQ[b]) * r[t] / 10)));
+  const lvl = r.map(d => src - 20 * Math.log10(d));
+  ship.forEach((row, t) => { const k = sea_t[t] * 10 ** (lvl[t] / 10) / spec.reduce((a, b) => a + b, 0); row.forEach((_, b) => row[b] *= k); });
+  // map
+  const g = sc.getContext("2d"), W = sc.width, H = sc.height;
+  g.clearRect(0, 0, W, H);
+  g.strokeStyle = css("--rule"); g.lineWidth = 1;
+  [1, 2, 4].forEach(km => { const [cx, cy] = toPx(0, 0); g.beginPath(); g.arc(cx, cy, km / KM_W * W, 0, 7); g.stroke();
+    g.fillStyle = css("--muted"); g.font = "11px " + css("--sans"); g.fillText(km + " km", cx + km / KM_W * W + 4, cy - 4); });
+  const P = T.map(p => toPx(p.x, p.y));
+  g.setLineDash([5, 5]); g.strokeStyle = css("--muted"); g.beginPath(); g.moveTo(...P[0]); P.forEach(q => g.lineTo(...q)); g.stroke(); g.setLineDash([]);
+  P.forEach((q, t) => { g.fillStyle = css("--ship"); g.globalAlpha = Math.max(0.15, Math.min(1, (lvl[t] + 20) / 30)); g.beginPath(); g.arc(q[0], q[1], 3, 0, 7); g.fill(); });
+  g.globalAlpha = 1;
+  const [sx, sy] = toPx(0, 0);
+  g.fillStyle = css("--sea"); g.beginPath(); g.arc(sx, sy, 7, 0, 7); g.fill();
+  g.fillStyle = css("--ink"); g.font = "600 12px " + css("--sans"); g.fillText("sensor", sx + 10, sy + 16);
+  const at = playMin == null ? 7 : playMin, [bx, by] = P[at];
+  g.strokeStyle = css("--ship"); g.lineWidth = 1.5; g.setLineDash([2, 4]); g.beginPath(); g.moveTo(sx, sy); g.lineTo(bx, by); g.stroke(); g.setLineDash([]);
+  g.fillStyle = css("--ship"); g.beginPath();  // hull pointing right
+  g.moveTo(bx + 16, by); g.lineTo(bx + 6, by - 7); g.lineTo(bx - 14, by - 7); g.lineTo(bx - 14, by + 7); g.lineTo(bx + 6, by + 7); g.closePath(); g.fill();
+  g.fillStyle = css("--ink"); g.font = "600 12px " + css("--sans"); g.fillText(`min ${at + 1}`, bx - 14, by - 12);
+  // grid
+  const cv = document.getElementById("sGrid"), gg = cv.getContext("2d"), Wc = cv.width, Hc = cv.height, lo = seaMaxDb - 25;
+  gg.clearRect(0, 0, Wc, Hc);
+  for (let t = 0; t < 15; t++) for (let b = 0; b < 25; b++) {
+    const tot = SEA[t][b] + ship[t][b], x = t * Wc / 15, y = Hc - (b + 1) * Hc / 25;
+    gg.globalAlpha = Math.max(0.05, Math.min(1, (10 * Math.log10(tot) - lo) / 35)); gg.fillStyle = css("--ink"); gg.fillRect(x, y, Wc / 15 + 0.5, Hc / 25 + 0.5);
+    if (red.checked) { gg.globalAlpha = 0.85 * ship[t][b] / tot; gg.fillStyle = css("--ship"); gg.fillRect(x, y, Wc / 15 + 0.5, Hc / 25 + 0.5); }
+  }
+  gg.globalAlpha = 1;
+  if (playMin != null) { gg.strokeStyle = css("--ship"); gg.lineWidth = 2; gg.strokeRect(playMin * Wc / 15 + 1, 1, Wc / 15 - 2, Hc - 2); }
+  const shipE = ship.flat().reduce((a, b) => a + b, 0), share = shipE / (shipE + seaTot), dmin = Math.min(...r);
+  const fmt = d => d < 1 ? (d * 1000).toFixed(0) + " m" : d.toFixed(1) + " km";
+  document.getElementById("pd").textContent = fmt(dmin);
+  document.getElementById("pd8").textContent = fmt(r[7]);
+  const lmax = Math.max(...lvl);
+  document.getElementById("pl").textContent = (lmax > 0 ? "+" : "") + lmax.toFixed(0) + " dB";
+  document.getElementById("pa").textContent = "-" + (absorb(FREQ[24]) * dmin).toFixed(1) + " dB";
+  document.getElementById("ps").textContent = (share * 100).toFixed(share < 0.1 ? 1 : 0) + "%";
+  document.getElementById("sSrcV").textContent = (sSrc.value > 0 ? "+" : "") + sSrc.value + " dB";
+  document.getElementById("sSpdV").textContent = sSpd.value + " knots";
+}
+let dragging = false;
+const kmAt = e => { const b = sc.getBoundingClientRect(); return { x: ((e.clientX - b.left) / b.width - 0.5) * KM_W, y: (0.5 - (e.clientY - b.top) / b.height) * KM_H }; };
+sc.onpointerdown = e => { dragging = true; sc.classList.add("drag"); sc.setPointerCapture(e.pointerId); Object.assign(shipPos, kmAt(e)); scene(); };
+sc.onpointermove = e => { if (dragging) { Object.assign(shipPos, kmAt(e)); scene(); } };
+sc.onpointerup = () => { dragging = false; sc.classList.remove("drag"); };
+[sSrc, sSpd].forEach(e => e.oninput = scene);
+red.addEventListener("input", scene);
+document.getElementById("sPlay").onclick = () => {
+  let t = 0; playMin = 0; scene();
+  const id = setInterval(() => { t++; if (t > 14) { clearInterval(id); playMin = null; } else playMin = t; scene(); }, 500);
+};
+scene();
+
+// concept 2
+const sea = document.getElementById("sea"), shp = document.getElementById("shp");
+function mixUpd() {
+  const s = 10 ** (sea.value / 10), v = 10 ** (shp.value / 10), sh = v / (s + v);
+  document.getElementById("seaV").textContent = sea.value + " dB";
+  document.getElementById("shpV").textContent = shp.value + " dB";
+  document.getElementById("bSea").style.width = (100 - sh * 100) + "%";
+  document.getElementById("bShip").style.width = (sh * 100) + "%";
+  document.getElementById("share").textContent = (sh * 100).toFixed(sh < 0.1 ? 1 : 0) + "%";
+}
+sea.oninput = shp.oninput = mixUpd; mixUpd();
+
+// concept 3
+const TINT = { empty: "--sea", trap: "--natural", faint: "--ship", medium: "--ship", loud: "--ship" };
+D.groups.forEach(gr => {
+  const e = ex(gr.key), d = document.createElement("div"); d.className = "kind";
+  d.innerHTML = `<canvas width="150" height="130"></canvas><h3>${gr.label}</h3>
+    <div class="mini">${(gr.frac * 100).toFixed(0)}% of windows<br>this one: true <b>${(e.truth * 100).toFixed(0)}%</b>, we said <b>${(e.v8 * 100).toFixed(0)}%</b></div>`;
+  grid(d.querySelector("canvas"), e.db, css(TINT[gr.key]));
+  document.getElementById("kinds").appendChild(d);
+});
+
+// points chart
+function pts(k) {
+  const el = document.getElementById("pts"); el.innerHTML = "";
+  D.groups.forEach(gr => {
+    const r = document.createElement("div"); r.className = "r";
+    r.innerHTML = `<div class="name">${gr.label}<div class="mini">truth avg ${(gr.truth * 100).toFixed(0)}% · we say ${(gr[k].guess * 100).toFixed(0)}%</div></div>
+      <div class="lines" style="padding-right:56px"><div style="width:${gr.frac * 100}%;background:var(--muted)"><span>${(gr.frac * 100).toFixed(0)}%</span></div>
+      <div style="width:${gr[k].lost * 100}%;background:var(--ship)"><span>${(gr[k].lost * 100).toFixed(0)}%</span></div></div>`;
+    el.appendChild(r);
+  });
+  const loud = D.groups.find(g => g.key === "loud");
+  document.getElementById("ptsNote").textContent = k === "v8"
+    ? `Loud ships are ${(loud.frac * 100).toFixed(0)}% of windows but ${(loud.v8.lost * 100).toFixed(0)}% of the lost points: when a ship carries ${(loud.truth * 100).toFixed(0)}% of the energy, we guess ${(loud.v8.guess * 100).toFixed(0)}%.`
+    : "The splitter loses most on windows with no counted ship: it calls any ship-like sound a ship.";
+}
+document.querySelectorAll("#tog button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("#tog button").forEach(x => x.classList.toggle("on", x === b)); pts(b.dataset.k);
+});
+pts("v8");
+
+// problems
+const G = k => D.groups.find(g => g.key === k).v8;
+const PROBS = [
+  { tag: `${(G("loud").lost * 100).toFixed(0)}% of lost points`, h: "1. Loud ships get badly under-guessed",
+    p: "When the added ship is loud, we guess a third of the true value. Why: a loud ship that counts and a loud ship that was already in the recording look the same to the model. Unsure which it is, it plays safe and guesses in the middle, which is wrong both ways.",
+    t: "Try: find any clue that tells counted from uncounted ships (pitch colour, how steady it is, how it fades). Measure: the red bar on loud ships shrinks." },
+  { tag: `${(G("trap").lost * 100).toFixed(0)}% of lost points`, h: "2. Ships that don't count get counted",
+    p: "The mirror image of problem 1. When the only ship is one already in the recording, we still say 13%. Fixing the clue for problem 1 fixes this too.",
+    t: "Same work as problem 1. Measure: our guess on these windows moves toward 0." },
+  { tag: `${(G("faint").lost * 100).toFixed(0)}% of lost points`, h: "3. Faint ships get over-guessed",
+    p: "A ship carrying 2% of the energy is buried under the sea. We guess 10%, partly the same play-it-safe habit. Each miss is small, but these windows are common.",
+    t: "Try: better use of the quiet minutes as a baseline for what the sea alone sounds like." },
+  { tag: "affects everything", h: "4. Our fake mixes are a guess at the real ones",
+    p: "We have no labelled real windows, so we train and grade on mixes we make ourselves. Our grader now predicts the board to within about 0.01, but every number on this page is only as true as those mixes.",
+    t: "Keep checking: every submission tests the grader again. Board noise is about 0.01, so only trust gains bigger than that." },
+];
+document.getElementById("probs").innerHTML = PROBS.map(x =>
+  `<div class="prob"><div class="tag">${x.tag}</div><h3>${x.h}</h3><p>${x.p}</p><div class="try">${x.t}</div></div>`).join("");
+
+const PINS = [["Us", 0.811, "--ship", 0], ["Pack", 0.82, "--muted", 1], ["1st", 0.905, "--good", 0]], lo = 0.76, hi = 0.92;
+document.getElementById("pins").innerHTML = PINS.map(([n, v, c, up]) => up
+  ? `<div class="pin up" style="left:${(v - lo) / (hi - lo) * 100}%"><b>${n}</b> ${v.toFixed(3)}<i style="background:var(${c})"></i></div>`
+  : `<div class="pin" style="left:${(v - lo) / (hi - lo) * 100}%"><i style="background:var(${c})"></i><b>${n}</b><br>${v.toFixed(3)}</div>`).join("");
+</script>
+</body>
+</html>

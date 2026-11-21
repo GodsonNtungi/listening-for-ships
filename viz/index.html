@@ -1,0 +1,1289 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Listening for Ships</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #F6F1E7;
+  --paper-2: #EFE8D9;
+  --ink: #1D2433;
+  --ink-2: #4A5262;
+  --muted: #7C8494;
+  --rule: #DCD3C2;
+  --sea: #2B5672;
+  --wind: #2A6FC0;
+  --shrimp: #D99A00;
+  --whale: #1A9E78;
+  --ship: #C8442A;
+  --serif: "Newsreader", Georgia, "Times New Roman", serif;
+  --sans: "Libre Franklin", "Helvetica Neue", Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 20px;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+body::before {
+  content: "";
+  position: fixed; inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  opacity: .5;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .55  0 0 0 0 .5  0 0 0 0 .42  0 0 0 .09 0'/></filter><rect width='300' height='300' filter='url(%23n)'/></svg>");
+}
+.col { max-width: 680px; margin: 0 auto; padding: 0 16px; }
+.wide { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+p { margin: 0 0 1.1em; }
+strong { font-weight: 600; }
+.kicker {
+  font-family: var(--sans); font-size: 12px; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--ship);
+  margin: 0 0 14px;
+}
+h1 {
+  font-family: var(--serif); font-weight: 500;
+  font-size: clamp(40px, 7vw, 76px); line-height: 1.02; letter-spacing: -.02em;
+  margin: 0 0 18px;
+}
+h2 {
+  font-family: var(--serif); font-weight: 500;
+  font-size: clamp(30px, 4.4vw, 42px); line-height: 1.1; letter-spacing: -.012em;
+  margin: 0 0 22px;
+}
+.dek { font-size: clamp(20px, 2.4vw, 25px); line-height: 1.4; color: var(--ink-2); margin: 0 0 22px; font-style: italic; }
+.byline { font-family: var(--sans); font-size: 13px; color: var(--muted); letter-spacing: .02em; }
+.byline b { color: var(--ink); font-weight: 600; }
+.lede::first-letter {
+  float: left; font-size: 4.3em; line-height: .82; padding: .07em .1em 0 0;
+  font-weight: 500; color: var(--sea);
+}
+.hl-ship { color: var(--ship); font-weight: 600; }
+.hl-whale { color: #12795C; font-weight: 600; }
+.hl-wind { color: var(--wind); font-weight: 600; }
+.hl-shrimp { color: #8F6500; font-weight: 600; }
+
+header.hero { padding: 64px 0 0; }
+.scene-wrap { position: relative; margin-top: 34px; }
+#scene { display: block; width: 100%; height: auto; }
+.rolling {
+  position: relative; margin: 0 auto; max-width: 1080px; padding: 0 16px;
+}
+.rolling-inner { position: relative; border-top: 1px solid var(--rule); padding-top: 12px; }
+#roll { display: block; width: 100%; height: 132px; border-radius: 2px; }
+.roll-cap { display: flex; justify-content: space-between; gap: 12px; font-family: var(--sans); font-size: 12px; color: var(--muted); margin-top: 8px; }
+.roll-cap b { color: var(--ink-2); font-weight: 600; }
+.axis-tag { position: absolute; font-family: var(--sans); font-size: 11px; color: var(--ink-2); background: rgba(246,241,231,.85); padding: 1px 5px; border-radius: 2px; pointer-events: none; }
+
+section.chapter { padding: 96px 0 24px; }
+.rule { border: 0; border-top: 1px solid var(--rule); max-width: 680px; margin: 0 auto; }
+
+figure { margin: 34px 0 30px; }
+figcaption, .note { font-family: var(--sans); font-size: 13px; line-height: 1.5; color: var(--muted); margin-top: 10px; }
+.fig-title { font-family: var(--sans); font-size: 15px; font-weight: 600; color: var(--ink); margin: 0 0 4px; }
+.fig-sub { font-family: var(--sans); font-size: 13px; color: var(--ink-2); margin: 0 0 14px; }
+
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; font-family: var(--sans); font-size: 13px; color: var(--ink-2); margin: 0 0 14px; }
+.chip {
+  font: 500 13px/1 var(--sans); color: var(--ink-2);
+  border: 1px solid var(--rule); background: rgba(255,255,255,.45);
+  padding: 8px 12px 8px 10px; border-radius: 999px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 8px; min-height: 36px;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.chip:hover { border-color: var(--ink-2); }
+.chip .sw { width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
+.chip[aria-pressed="false"] { color: var(--muted); background: transparent; }
+.chip[aria-pressed="false"] .sw { background: transparent; box-shadow: inset 0 0 0 1.5px var(--c); }
+.chip.solo { padding: 8px 14px; }
+.chip.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+button.play {
+  font: 600 13px/1 var(--sans); background: var(--ink); color: var(--paper);
+  border: 0; border-radius: 999px; padding: 0 16px; height: 36px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+input[type=range] { accent-color: var(--ink); }
+.range { flex: 1 1 220px; min-width: 160px; display: flex; align-items: center; gap: 10px; }
+.range input { width: 100%; height: 28px; }
+.readout { font-family: var(--sans); font-variant-numeric: tabular-nums; }
+
+.tip {
+  position: fixed; z-index: 60; pointer-events: none;
+  background: var(--ink); color: var(--paper);
+  font: 500 12px/1.45 var(--sans); padding: 7px 10px; border-radius: 4px;
+  box-shadow: 0 4px 14px rgba(29,36,51,.18);
+  opacity: 0; transform: translate(-50%, calc(-100% - 12px)); transition: opacity .1s;
+  white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+.tip.show { opacity: 1; }
+.tip .k { color: #B9C0CC; }
+
+/* chapter 1 */
+#spec { width: 100%; height: auto; display: block; overflow: visible; }
+
+/* chapter 2 */
+.grid2 { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 28px; align-items: start; }
+#map { width: 100%; height: auto; display: block; }
+.heat { display: block; width: 100%; }
+#heat2 { height: 300px; }
+.event-cap {
+  min-height: 56px; margin-top: 12px; padding: 10px 0 0 14px; border-left: 3px solid var(--rule);
+  font-family: var(--serif); font-size: 18px; line-height: 1.4; color: var(--ink-2);
+  transition: border-color .3s;
+}
+.event-cap b { color: var(--ink); font-weight: 600; }
+.clock { font-family: var(--sans); font-size: 13px; color: var(--ink-2); min-width: 92px; }
+
+/* chapter 3 */
+.mix { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 10px; align-items: center; }
+.mix .op { font: 300 34px/1 var(--sans); color: var(--muted); padding-top: 22px; }
+.mix-cell .lab { font-family: var(--sans); font-size: 13px; font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; gap: 7px; }
+.mix-cell .lab small { font-weight: 400; color: var(--muted); }
+.mix-cell canvas { height: 190px; }
+.share-big {
+  display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap;
+  margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--rule);
+}
+.share-big .num { font-family: var(--serif); font-size: 64px; line-height: 1; color: var(--ship); font-variant-numeric: tabular-nums; font-weight: 500; }
+.share-big .txt { font-family: var(--sans); font-size: 14px; color: var(--ink-2); max-width: 420px; line-height: 1.5; }
+.sharebar { position: relative; height: 14px; background: rgba(43,86,114,.18); border-radius: 7px; overflow: hidden; margin-top: 14px; }
+.sharebar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--ship); border-radius: 7px; transition: width .25s ease; }
+
+/* chapter 4 */
+.grid4 { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 34px; align-items: start; }
+.range > span { white-space: nowrap; }
+#waffle { width: 100%; height: auto; display: block; }
+#curve { width: 100%; height: auto; display: block; overflow: visible; touch-action: none; }
+.big-stat { font-family: var(--serif); font-size: 46px; line-height: 1; color: var(--ship); font-variant-numeric: tabular-nums; margin-top: 12px; }
+.big-stat small { display: block; font-family: var(--sans); font-size: 13px; color: var(--ink-2); margin-top: 6px; line-height: 1.4; }
+.pull {
+  font-family: var(--serif); font-style: italic; font-size: 26px; line-height: 1.35; color: var(--sea);
+  border-left: 3px solid var(--ship); padding: 2px 0 2px 20px; margin: 34px 0;
+}
+
+/* chapter 5 */
+.grid5 { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 30px; align-items: start; }
+#scatter { width: 100%; height: auto; display: block; overflow: visible; }
+.scorebox .lab { font-family: var(--sans); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.scorebox .num { font-family: var(--serif); font-size: 64px; line-height: 1; font-variant-numeric: tabular-nums; margin: 4px 0 2px; }
+.scorebox .sub { font-family: var(--sans); font-size: 13px; color: var(--ink-2); line-height: 1.45; }
+#gauge { width: 100%; height: auto; display: block; margin-top: 18px; overflow: visible; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+
+/* chapter 6 */
+#pipe { width: 100%; height: auto; display: block; }
+.flow { stroke-dasharray: 2 12; stroke-linecap: round; animation: flow 1.2s linear infinite; }
+@keyframes flow { to { stroke-dashoffset: -14; } }
+
+/* chapter 7 */
+#timeline { width: 100%; height: auto; display: block; overflow: visible; }
+.rules { list-style: none; padding: 0; margin: 26px 0 0; counter-reset: r; }
+.rules li { position: relative; padding: 0 0 18px 46px; counter-increment: r; }
+.rules li::before {
+  content: counter(r); position: absolute; left: 0; top: 2px;
+  width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid var(--ink);
+  font: 600 13px/27px var(--sans); text-align: center;
+}
+.rules li b { font-weight: 600; }
+
+footer { padding: 70px 0 90px; }
+footer p { font-family: var(--sans); font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+.reveal { opacity: 0; transform: translateY(18px); transition: opacity .9s ease, transform .9s ease; }
+.reveal.in { opacity: 1; transform: none; }
+
+@media (max-width: 760px) {
+  body { font-size: 18px; }
+  header.hero { padding-top: 40px; }
+  section.chapter { padding-top: 64px; }
+  .grid2, .grid4, .grid5 { grid-template-columns: 1fr; }
+  .grid2 #map { max-width: 320px; margin: 0 auto; }
+  .grid4 #waffle { max-width: 220px; margin: 0 auto; }
+  .mix { grid-template-columns: 1fr; gap: 4px; }
+  .mix .op { padding: 0; text-align: center; font-size: 26px; }
+  .mix-cell canvas { height: 150px; }
+  .share-big .num { font-size: 52px; }
+  #heat2 { height: 240px; }
+  #roll { height: 104px; }
+  #scene { height: 320px; }
+  .pull { font-size: 22px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .flow { animation: none; }
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="wc" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="3" seed="4" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="22" xChannelSelector="R" yChannelSelector="G" result="d"/>
+      <feGaussianBlur in="d" stdDeviation="1.4" result="soft"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.55" numOctaves="2" seed="9" result="g"/>
+      <feColorMatrix in="g" type="matrix" values="1 0 0 0 0  1 0 0 0 0  1 0 0 0 0  1 0 0 0 0" result="g2"/>
+      <feComposite in="soft" in2="g2" operator="arithmetic" k1="0.22" k2="0.9" k3="0" k4="0" result="grained"/>
+      <feMorphology in="soft" operator="erode" radius="2.5" result="inner"/>
+      <feComposite in="soft" in2="inner" operator="out" result="edge"/>
+      <feColorMatrix in="edge" type="matrix" values=".7 0 0 0 0  0 .7 0 0 0  0 0 .7 0 0  0 0 0 .4 0" result="edgeDark"/>
+      <feMerge><feMergeNode in="grained"/><feMergeNode in="edgeDark"/></feMerge>
+    </filter>
+    <filter id="wcs" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="2" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="5" xChannelSelector="R" yChannelSelector="G" result="d"/>
+      <feGaussianBlur in="d" stdDeviation=".5" result="soft"/>
+      <feMorphology in="soft" operator="erode" radius="1.2" result="inner"/>
+      <feComposite in="soft" in2="inner" operator="out" result="edge"/>
+      <feColorMatrix in="edge" type="matrix" values=".55 0 0 0 0  0 .55 0 0 0  0 0 .55 0 0  0 0 0 .6 0" result="edgeDark"/>
+      <feComposite in="soft" in2="soft" operator="arithmetic" k2="0.88" result="lighter"/>
+      <feMerge><feMergeNode in="lighter"/><feMergeNode in="edgeDark"/></feMerge>
+    </filter>
+    <filter id="ink" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.08" numOctaves="1" seed="5" result="w"/>
+      <feDisplacementMap in="SourceGraphic" in2="w" scale="1.6" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+</svg>
+
+<header class="hero">
+  <div class="col">
+    <p class="kicker">Underwater Vessel Noise Challenge · A visual brief</p>
+    <h1>Listening for ships in a noisy sea</h1>
+    <p class="dek">Microphones on the South African seabed hear everything at once: wind, waves, whales, shrimp and ships. The challenge is to work out how much of what they hear is a ship.</p>
+    <p class="byline"><b>Zindi</b> · French Embassy in South Africa, SAEON, SANBI · Closes <b>13 Dec 2026</b> · $5,000</p>
+  </div>
+  <div class="scene-wrap">
+    <svg id="scene" viewBox="0 0 1200 520" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Watercolor cross-section of the sea: a cargo ship crosses the surface, sound rings spread from its propeller, a whale sings, and a hydrophone sits on the seabed listening.">
+      <defs>
+        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#E9E3D3"/><stop offset="1" stop-color="#CFDDE0"/>
+        </linearGradient>
+        <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#A4CDD0"/><stop offset=".3" stop-color="#6FA3B2"/>
+          <stop offset=".7" stop-color="#3D7090"/><stop offset="1" stop-color="#28506E"/>
+        </linearGradient>
+        <linearGradient id="sand" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#CDB585"/><stop offset="1" stop-color="#A88C5B"/>
+        </linearGradient>
+        <clipPath id="underwater"><rect x="0" y="168" width="1200" height="352"/></clipPath>
+      </defs>
+      <rect width="1200" height="180" fill="url(#sky)"/>
+      <g filter="url(#wc)">
+        <path d="M-20 172 L60 150 L120 146 L150 118 L190 92 L330 88 L360 100 L392 124 L440 140 L520 156 L600 166 L-20 176Z" fill="#8E9BA6" opacity=".72"/>
+        <path d="M380 172 L460 158 L540 160 L600 152 L660 162 L720 170Z" fill="#A2ADB4" opacity=".6"/>
+        <ellipse cx="980" cy="62" rx="120" ry="16" fill="#FFFFFF" opacity=".5"/>
+        <ellipse cx="860" cy="88" rx="80" ry="10" fill="#FFFFFF" opacity=".45"/>
+      </g>
+      <g filter="url(#wc)">
+        <path id="seaBody" d="M-30 170 Q 150 160 300 170 T 600 170 T 900 170 T 1230 170 L1230 540 L-30 540Z" fill="url(#water)"/>
+        <path d="M-30 470 Q 120 452 260 468 T 560 462 T 860 474 T 1230 458 L1230 540 L-30 540Z" fill="url(#sand)"/>
+        <ellipse cx="200" cy="300" rx="190" ry="40" fill="#A9CFD4" opacity=".25"/>
+        <ellipse cx="900" cy="250" rx="240" ry="30" fill="#A9CFD4" opacity=".22"/>
+      </g>
+      <g id="rings" clip-path="url(#underwater)"></g>
+      <g id="whale" filter="url(#wcs)">
+        <path d="M0 0 C 30 -22 110 -26 170 -10 C 200 -2 222 6 240 0 L 262 -18 L 258 4 L 272 22 L 244 12 C 220 20 190 24 160 22 C 100 20 30 18 0 0Z" fill="#3D5C72"/>
+        <path d="M60 10 C 80 22 100 30 112 40 C 96 38 76 30 58 18Z" fill="#33505F"/>
+        <path d="M14 4 C 50 14 120 16 170 14" stroke="#CFDDE0" stroke-width="1.2" fill="none" opacity=".55"/>
+      </g>
+      <g id="hydro" filter="url(#ink)">
+        <line x1="760" y1="404" x2="760" y2="452" stroke="#E9E3D3" stroke-width="1.4" stroke-dasharray="3 3"/>
+        <circle cx="760" cy="398" r="9" fill="#E6A33A" stroke="#26303D" stroke-width="1.4"/>
+        <path d="M746 486 L760 470 L774 486" fill="none" stroke="#26303D" stroke-width="1.6"/>
+        <rect x="753" y="452" width="14" height="26" rx="4" fill="#E9E3D3" stroke="#26303D" stroke-width="1.6"/>
+        <circle id="hydroGlow" cx="760" cy="465" r="16" fill="none" stroke="#C8442A" stroke-width="2" opacity="0"/>
+      </g>
+      <g font-family="Libre Franklin, sans-serif" font-size="13" fill="#F6F1E7" text-anchor="end">
+        <text x="736" y="468" font-weight="600">Hydrophone</text>
+        <text x="736" y="484" font-size="12" opacity=".85">an underwater microphone</text>
+      </g>
+      <g id="ship">
+        <g filter="url(#wcs)">
+          <path d="M0 0 L 250 0 L 236 26 L 24 26 Z" fill="#7E3524"/>
+          <path d="M18 26 L 238 26 L 232 36 L 26 36Z" fill="#4E2A25"/>
+          <rect x="22" y="-26" width="34" height="26" fill="#C8442A"/>
+          <rect x="58" y="-26" width="34" height="26" fill="#2A6FC0"/>
+          <rect x="94" y="-26" width="34" height="26" fill="#D99A00"/>
+          <rect x="130" y="-26" width="34" height="26" fill="#1A9E78"/>
+          <rect x="58" y="-50" width="34" height="24" fill="#D99A00"/>
+          <rect x="94" y="-50" width="34" height="24" fill="#C8442A"/>
+          <rect x="22" y="-50" width="34" height="24" fill="#2A6FC0"/>
+          <path d="M178 -54 L 220 -54 L 220 0 L 178 0Z" fill="#E9E3D3"/>
+          <rect x="186" y="-46" width="26" height="6" fill="#4A5262"/>
+          <rect x="196" y="-74" width="10" height="20" fill="#26303D"/>
+        </g>
+        <g id="prop" transform="translate(16 30)">
+          <ellipse cx="0" cy="0" rx="3" ry="9" fill="#26303D"/>
+        </g>
+      </g>
+      <g id="surface" stroke="#F6F1E7" stroke-width="1.4" fill="none" opacity=".7" stroke-linecap="round"></g>
+    </svg>
+  </div>
+  <div class="rolling">
+    <div class="rolling-inner">
+      <canvas id="roll" aria-label="Live picture of what the hydrophone hears: time runs left to right, low pitch at the bottom, darker means louder."></canvas>
+      <span class="axis-tag" style="left:22px;top:18px">high pitch</span>
+      <span class="axis-tag" style="left:22px;bottom:34px">low pitch</span>
+      <div class="roll-cap"><span><b>What the hydrophone hears</b>, live: energy in 25 pitch bands. Darker means louder. Watch the ship pass.</span><span>now →</span></div>
+    </div>
+  </div>
+</header>
+
+<section class="chapter" id="c1">
+  <div class="col reveal">
+    <p class="kicker">1 · The sea is never quiet</p>
+    <h2>Every sound has its own pitch range</h2>
+    <p class="lede">A hydrophone does not hear a ship on its own. It hears the whole sea at once. <span class="hl-wind">Wind and breaking waves</span> make a steady hiss across most pitches. <span class="hl-shrimp">Snapping shrimp</span> crackle at the top. <span class="hl-whale">Whales</span> sing in the middle. A <span class="hl-ship">ship's engine and propeller</span> rumble low.</p>
+    <p>The challenge data never gives you the audio itself. It gives you how much energy landed in each of <strong>25 pitch bands</strong>, from deep rumble to high crackle. Turn the sources on and off to see how they stack up.</p>
+  </div>
+  <div class="col reveal">
+    <figure>
+      <p class="fig-title">Loudness in each of the 25 bands, by source</p>
+      <p class="fig-sub">The black line is what the hydrophone actually records: all sources added together.</p>
+      <div class="controls" id="srcChips"></div>
+      <svg id="spec" viewBox="0 0 640 340" role="img" aria-label="Loudness by pitch band for wind and waves, snapping shrimp, whales and a ship, with their total."></svg>
+      <figcaption>Illustrative shapes based on typical ocean sound, not the challenge files. Band centres are approximate.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<hr class="rule">
+
+<section class="chapter" id="c2">
+  <div class="col reveal">
+    <p class="kicker">2 · What you actually get</p>
+    <h2>Two hours of sea, as a grid of numbers</h2>
+    <p>Each minute, the 25 bands become one column of the grid. A passing ship leaves a shape you learn to spot: a low, dark swell that grows as it approaches and fades as it leaves.</p>
+    <p>You also get <strong>ship-tracking (AIS) positions</strong>: where nearby ships said they were. But a ship being nearby does not prove it made the sound. Distant ships fade into the background. Small boats often carry no tracker at all.</p>
+  </div>
+  <div class="wide reveal">
+    <figure>
+      <div class="controls">
+        <button class="play" id="play2" aria-label="Play or pause">▶ Play</button>
+        <span class="clock readout" id="clock2">minute 0</span>
+        <label class="range"><input type="range" id="scrub2" min="0" max="119" value="0" aria-label="Minute"></label>
+      </div>
+      <div class="grid2">
+        <div>
+          <p class="fig-title">Ship-tracking map</p>
+          <svg id="map" viewBox="0 0 300 300" role="img" aria-label="Map around the hydrophone with ship positions over time."></svg>
+        </div>
+        <div>
+          <p class="fig-title">The hydrophone's grid: minutes across, pitch up</p>
+          <canvas class="heat" id="heat2"></canvas>
+          <div class="event-cap" id="event2">Press play. Two hours pass in about 25 seconds.</div>
+        </div>
+      </div>
+      <figcaption>Made-up two hours for illustration. Shading is in decibels, the usual log scale for sound. Hover the grid to read a cell.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<hr class="rule">
+
+<section class="chapter" id="c3">
+  <div class="col reveal">
+    <p class="kicker">3 · Nobody labelled the real data</p>
+    <h2>So the organisers built a test they can grade</h2>
+    <p>No one has gone through the South African recordings and marked "ship here, ship not there". With no answer key, there is nothing to score against.</p>
+    <p>So each test window is made like a cocktail: take a <strong>real stretch of background</strong>, then mix in a <span class="hl-ship">recorded ship passing</span> at a known loudness. Because they did the mixing, they know exactly how much of the energy came from the added ship. Some windows get no ship at all.</p>
+  </div>
+  <div class="wide reveal">
+    <figure>
+      <div class="controls">
+        <span>Background:</span>
+        <span id="bgChips" style="display:contents"></span>
+      </div>
+      <div class="controls">
+        <label class="range"><span style="white-space:nowrap">Added ship, quieter ↔ louder</span><input type="range" id="gain3" min="-30" max="6" step="1" value="-10" aria-label="Loudness of the added ship"></label>
+        <button class="chip solo" id="none3" aria-pressed="false">No ship added</button>
+      </div>
+      <div class="mix">
+        <div class="mix-cell"><div class="lab">Real background <small>(SA recording)</small></div><canvas class="heat" id="h3a"></canvas></div>
+        <div class="op">+</div>
+        <div class="mix-cell"><div class="lab"><span style="width:10px;height:10px;border-radius:50%;background:var(--ship);display:inline-block"></span>Added ship <small>(known)</small></div><canvas class="heat" id="h3b"></canvas></div>
+        <div class="op">=</div>
+        <div class="mix-cell"><div class="lab">Test window <small>(what you see)</small></div><canvas class="heat" id="h3c"></canvas></div>
+      </div>
+      <div class="share-big">
+        <div class="num readout" id="share3">0.00</div>
+        <div class="txt"><b>The answer you must predict.</b> The share of the window's total energy that came from the added ship. You only ever see the right-hand grid.</div>
+      </div>
+      <div class="sharebar"><i id="sharebar3"></i></div>
+      <figcaption>Try the same ship over a calm night and a windy afternoon. The ship didn't change, but its share did: the answer depends on the background as much as on the ship.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<hr class="rule">
+
+<section class="chapter" id="c4">
+  <div class="col reveal">
+    <p class="kicker">4 · The number, exactly</p>
+    <h2>A share of energy, not a yes or no</h2>
+    <p>Add up the ship's energy in every minute and every band. Divide by the total energy in the mixed window. If the ship added 2 units to a window holding 10, the answer is <strong>0.20</strong>. If nothing was added, it is <strong>0</strong>, even if the background has ships of its own.</p>
+    <p>One trap: sound is usually measured in decibels, a log scale, but the share is computed on raw energy. In decibels, a ship just 10 dB quieter than the background sounds close. In energy it is only a sliver. Drag the dot.</p>
+  </div>
+  <div class="wide reveal">
+    <figure>
+      <div class="grid4">
+        <div>
+          <p class="fig-title">100 units of energy</p>
+          <svg id="waffle" viewBox="0 0 220 220" role="img" aria-label="Waffle chart of 100 squares; the ship's share is shaded."></svg>
+          <div class="big-stat readout" id="stat4">0.50<small id="stat4s">The ship holds half the energy.</small></div>
+        </div>
+        <div>
+          <p class="fig-title">Ship's share vs how much louder it is than the background</p>
+          <svg id="curve" viewBox="0 0 620 360" role="img" aria-label="S-shaped curve: share of energy as a function of the ship's loudness relative to background in decibels."></svg>
+          <div class="controls" style="margin-top:6px"><label class="range"><span>Ship vs background</span><input type="range" id="db4" min="-30" max="20" step="1" value="0" aria-label="Ship loudness relative to background in decibels"></label><span class="readout" id="db4r" style="min-width:56px">0 dB</span></div>
+        </div>
+      </div>
+    </figure>
+    <div class="col" style="padding:0">
+      <p class="pull">Loud minutes count far more than quiet ones. One minute at the ship's closest pass can outweigh the whole rest of the window.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<section class="chapter" id="c5">
+  <div class="col reveal">
+    <p class="kicker">5 · How you're scored</p>
+    <h2>One minus your typical miss</h2>
+    <p>For each test window you submit one share. Zindi measures how far off you are, on average, with bigger misses punished more. The score is <strong>1 minus that typical miss</strong>, so 1.0 is perfect.</p>
+    <p>The organisers' starter model scores <strong>0.754</strong>: it misses by about 0.25 on a typical window. That is the bar to beat. Below, every dot is a test window. Slide your error down and watch the dots snap to the line.</p>
+  </div>
+  <div class="wide reveal">
+    <figure>
+      <div class="grid5">
+        <div>
+          <p class="fig-title">Your guess vs the true answer, for 90 windows</p>
+          <svg id="scatter" viewBox="0 0 560 420" role="img" aria-label="Scatter of predicted versus true share for illustrative windows."></svg>
+        </div>
+        <div class="scorebox">
+          <div class="lab">Your score</div>
+          <div class="num readout" id="score5">0.80</div>
+          <div class="sub" id="score5s">Typical miss: 0.20</div>
+          <div class="controls" style="margin-top:16px"><label class="range" style="flex-basis:100%"><span>Model error</span><input type="range" id="err5" min="0" max="40" value="20" aria-label="How wrong the model is"></label></div>
+          <div class="btnrow">
+            <button class="chip solo" data-mode="zero">Always guess 0</button>
+            <button class="chip solo" data-mode="mean">Always guess the average</button>
+            <button class="chip solo" data-mode="bench">Like the benchmark</button>
+          </div>
+          <svg id="gauge" viewBox="0 0 260 96" role="img" aria-label="Score scale with reference marks."></svg>
+        </div>
+      </div>
+      <figcaption>Made-up windows: we don't know the real test answers, and probing the leaderboard to find them is against the rules. Only the 0.754 benchmark is real. About 30% of test windows set the public leaderboard; the other 70% decide final ranks.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<hr class="rule">
+
+<section class="chapter" id="c6">
+  <div class="col reveal">
+    <p class="kicker">6 · Our first move</p>
+    <h2>Make our own answer key</h2>
+    <p>If the organisers can mix a known ship into real background, so can we. Take the unlabelled South African background, mix in ship recordings from a free public library (VTUAD, from Ocean Networks Canada), and we get as many practice windows as we like, each with a known answer.</p>
+    <p>Then teach a model to read the shape of a passing ship: how much the low bands swell, how the swell rises and falls over the minutes, how it stands out from the window's own normal level.</p>
+  </div>
+  <div class="wide reveal">
+    <figure>
+      <svg id="pipe" viewBox="0 0 1040 330" role="img" aria-label="Pipeline: South African background plus public ship recordings are mixed into practice windows with known answers, turned into features, used to train a model, which then predicts the test windows."></svg>
+      <figcaption>Test windows only pass through the finished model to get predictions. Learning anything from them breaks the rules.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<hr class="rule">
+
+<section class="chapter" id="c7">
+  <div class="col reveal">
+    <p class="kicker">7 · The clock and the rules</p>
+    <h2>Eight weeks, ten tries a day</h2>
+  </div>
+  <div class="wide reveal">
+    <figure>
+      <svg id="timeline" viewBox="0 0 1040 150" role="img" aria-label="Timeline from 16 October 2026 to 29 January 2027, with today marked on 18 October and the close on 13 December."></svg>
+    </figure>
+  </div>
+  <div class="col reveal">
+    <ol class="rules">
+      <li><b>Test windows are for predicting only.</b> No training, tuning or adjusting on them, and no reverse-engineering answers from the leaderboard.</li>
+      <li><b>Outside data is allowed if it is public.</b> Declare it on the discussion board with links and versions so everyone can get it.</li>
+      <li><b>Open-source tools only, no auto-ML.</b> Pretrained models are fine if anyone can download them.</li>
+      <li><b>Pick 2 final submissions.</b> Only those count on the hidden 70%. Small public-board gaps are noise.</li>
+      <li><b>Top 10 hand in code within 48 hours.</b> It must rerun to the same score, so fix every random seed from day one.</li>
+    </ol>
+  </div>
+</section>
+
+<footer>
+  <div class="col">
+    <hr class="rule" style="margin-bottom:22px">
+    <p>All charts use made-up data shaped like typical ocean sound, to explain the task. The real files (25 bands, one-minute steps, real South African backgrounds) replace them once downloaded. Facts from the Zindi brief as of 18 Oct 2026.</p>
+  </div>
+</footer>
+
+<div class="tip" id="tip"></div>
+
+<script>
+(() => {
+"use strict";
+const $ = (s, r = document) => r.querySelector(s);
+const NS = "http://www.w3.org/2000/svg";
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+const lin = db => Math.pow(10, db / 10);
+const toDb = e => 10 * Math.log10(e);
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const C = { wind: css("--wind"), shrimp: css("--shrimp"), whale: css("--whale"), ship: css("--ship"), ink: css("--ink"), ink2: css("--ink-2"), muted: css("--muted"), rule: css("--rule"), paper: css("--paper"), sea: css("--sea") };
+
+function el(tag, attrs = {}, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function rng(seed) { return () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296); }
+function gauss(r) { return (r() + r() + r() + r() - 2) * 1.22; }
+
+// tooltip
+const tip = $("#tip");
+function showTip(x, y, html) { tip.innerHTML = html; tip.style.left = x + "px"; tip.style.top = y + "px"; tip.classList.add("show"); }
+function hideTip() { tip.classList.remove("show"); }
+
+// bands
+const NB = 25;
+const HZ = [25, 31.5, 40, 50, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600, 2000, 2500, 3150, 4000, 5000, 6300];
+const fmtHz = f => f >= 1000 ? (f / 1000).toString().replace(/\.0$/, "") + " kHz" : f + " Hz";
+
+// source spectra in dB per band
+const SRC = {
+  wind: (b, w) => toDb(lin(70 + 15 * w - 0.05 * (b - 14) ** 2) + lin(76 - 1.1 * b + 4 * w)),
+  shrimp: b => b < 9 ? 52 - 8 * (9 - b) : 52 + 2.2 * (b - 9),
+  whale: b => 85 - 0.24 * (b - 11) ** 2,
+  ship: b => 96 - 0.1 * (b - 5) ** 2 - (b > 5 ? 0.3 * (b - 5) : 0) + (b === 5 ? 1.5 : 0),
+  boat: b => 82 - 0.2 * (b - 15) ** 2,
+};
+const spread = km => -20 * Math.log10(Math.max(km, 0.15));
+
+// color ramps
+function ramp(stops) {
+  const c = stops.map(h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)));
+  return t => {
+    t = clamp(t, 0, 1) * (c.length - 1);
+    const i = Math.min(Math.floor(t), c.length - 2), f = t - i;
+    return c[i].map((v, k) => Math.round(v + (c[i + 1][k] - v) * f));
+  };
+}
+const SEA = ramp(["#F3EDE0", "#D3E1DF", "#9DBDC6", "#5A88A3", "#2B5576", "#142640"]);
+const RUST = ramp(["#F1EADA", "#EFCBB0", "#DE8E66", "#BE5130", "#8A2F17", "#4D170A"]);
+const rgb = a => `rgb(${a[0]},${a[1]},${a[2]})`;
+
+function fitCanvas(cv) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = cv.clientWidth, h = cv.clientHeight;
+  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, w, h };
+}
+
+// heatmap with axes
+function drawHeat(cv, data, minutes, o) {
+  const { ctx, w, h } = fitCanvas(cv);
+  const L = o.axes ? 52 : 0, B = o.axes ? 22 : 0, T = 2, R = 2;
+  const pw = w - L - R, ph = h - B - T;
+  cv._geo = { L, T, pw, ph, minutes };
+  ctx.clearRect(0, 0, w, h);
+  const upto = o.upto ?? minutes;
+  const cw = pw / minutes, ch = ph / NB;
+  ctx.fillStyle = "rgba(43,86,114,.06)";
+  ctx.fillRect(L, T, pw, ph);
+  for (let t = 0; t < upto; t++) for (let b = 0; b < NB; b++) {
+    const v = data[t * NB + b];
+    const db = v > 0 ? toDb(v) : -99;
+    ctx.fillStyle = rgb((o.ramp || SEA)((db - o.lo) / (o.hi - o.lo)));
+    ctx.fillRect(L + t * cw, T + (NB - 1 - b) * ch, Math.ceil(cw) + 0.5, Math.ceil(ch) + 0.5);
+  }
+  if (o.playhead != null) {
+    ctx.fillStyle = C.ship;
+    ctx.fillRect(L + o.playhead * cw + cw - 1, T, 2, ph);
+  }
+  if (o.axes) {
+    ctx.font = "500 11px Libre Franklin, sans-serif";
+    ctx.fillStyle = C.ink2; ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    for (const b of [0, 6, 12, 18, 24]) ctx.fillText(fmtHz(HZ[b]), L - 7, T + (NB - 1 - b + 0.5) * ch);
+    ctx.textAlign = "center"; ctx.textBaseline = "top";
+    const step = minutes > 90 ? 30 : 15;
+    for (let m = 0; m <= minutes; m += step) {
+      const x = clamp(L + m * cw, L + 8, L + pw - 10);
+      ctx.fillText(m === 0 ? "0 min" : m, x, T + ph + 6);
+    }
+  }
+}
+function heatHover(cv, getData, unit) {
+  const move = e => {
+    const g = cv._geo; if (!g) return;
+    const r = cv.getBoundingClientRect();
+    const x = e.clientX - r.left - g.L, y = e.clientY - r.top - g.T;
+    if (x < 0 || y < 0 || x > g.pw || y > g.ph) return hideTip();
+    const t = Math.floor(x / (g.pw / g.minutes)), b = NB - 1 - Math.floor(y / (g.ph / NB));
+    const d = getData(); if (!d || (d.upto != null && t >= d.upto)) return hideTip();
+    const v = d.data[t * NB + b];
+    showTip(e.clientX, e.clientY, `<span class="k">Minute</span> ${t + 1} · <span class="k">Band</span> ${fmtHz(HZ[b])}<br><span class="k">${unit}</span> ${v > 0 ? toDb(v).toFixed(0) + " dB" : "nothing"}`);
+  };
+  cv.addEventListener("pointermove", move);
+  cv.addEventListener("pointerleave", hideTip);
+}
+
+// observers
+function onView(node, enter, leave, margin = "0px") {
+  new IntersectionObserver(es => es.forEach(e => e.isIntersecting ? enter && enter() : leave && leave()), { rootMargin: margin }).observe(node);
+}
+function responsive(svg, build) {
+  let lastW = 0;
+  const run = () => { const w = Math.round(svg.parentElement.clientWidth); if (!w || w === lastW) return; lastW = w; svg.replaceChildren(); build(w); };
+  run(); addEventListener("resize", run);
+}
+function txt(parent, x, y, s, attrs = {}) {
+  const t = el("text", Object.assign({ x, y, "font-family": "Libre Franklin", "font-size": 12 }, attrs), parent);
+  t.textContent = s;
+  return t;
+}
+function svgPoint(svg, e) { const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); }
+document.querySelectorAll(".reveal").forEach(n => onView(n, () => n.classList.add("in"), null, "0px 0px -10% 0px"));
+
+/* ---------------- HERO ---------------- */
+(function hero() {
+  const ship = $("#ship"), rings = $("#rings"), whale = $("#whale"), glow = $("#hydroGlow"), surf = $("#surface");
+  const HX = 760, HY = 465;
+  for (let i = 0; i < 12; i++) {
+    const x = (i * 103) % 1200, y = 176 + (i * 7) % 12;
+    el("path", { d: `M${x} ${y} q 10 -3 20 0 q 10 3 20 0`, "data-x": x, "data-y": y, opacity: 0.55 }, surf);
+  }
+  const roll = $("#roll");
+  const r = rng(11);
+  let running = false, last = 0, acc = 0, t = 0, ringT = 0, whaleRingT = 0;
+  const live = [];
+  function spawn(x, y, color, maxR, w) {
+    const c = el("circle", { cx: x, cy: y, r: 2, fill: "none", stroke: color, "stroke-width": w }, rings);
+    live.push({ c, r: 2, maxR });
+  }
+  function shipX(time) { return ((time * 24) % 1700) - 260; }
+  function whalePos(time) { return { x: 380 + 80 * Math.sin(time / 18), y: 330 + 14 * Math.sin(time / 7) }; }
+  function singing(time) { return (time % 16) > 9; }
+  let rollCtx, rw, rh;
+  function sizeRoll() { const f = fitCanvas(roll); rollCtx = f.ctx; rw = f.w; rh = f.h; rollCtx.fillStyle = rgb(SEA(0.08)); rollCtx.fillRect(0, 0, rw, rh); }
+  sizeRoll();
+  addEventListener("resize", sizeRoll);
+  function column(time) {
+    const sx = shipX(time) + 16, d = Math.hypot((sx - HX) / 100, 1.1);
+    const wp = whalePos(time), wd = Math.hypot((wp.x - HX) / 100, 0.8);
+    const sing = singing(time);
+    const col = [];
+    for (let b = 0; b < NB; b++) {
+      let e = lin(SRC.wind(b, 0.35) + gauss(r) * 1.2) + lin(SRC.shrimp(b) + gauss(r) * 2);
+      if (sx > -60 && sx < 1260) e += lin(SRC.ship(b) + spread(d) - 2 + gauss(r) * 0.8);
+      if (sing && r() < 0.8) e += lin(SRC.whale(b) + spread(wd) - 4 + gauss(r) * 2);
+      col.push(toDb(e));
+    }
+    return { col, d };
+  }
+  function frame(now) {
+    if (!running) return;
+    const dt = Math.min(0.05, (now - last) / 1000 || 0); last = now; t += dt;
+    const sx = shipX(t);
+    ship.setAttribute("transform", `translate(${sx} 146)`);
+    const wp = whalePos(t);
+    whale.setAttribute("transform", `translate(${wp.x} ${wp.y}) scale(.62)`);
+    surf.querySelectorAll("path").forEach((p, i) => {
+      const x = ((+p.dataset.x + t * (10 + i % 3 * 4)) % 1260) - 30;
+      p.setAttribute("transform", `translate(${x - p.dataset.x} 0)`);
+    });
+    ringT += dt; whaleRingT += dt;
+    if (ringT > 0.45 && sx > -40 && sx < 1240) { ringT = 0; spawn(sx + 16, 176, C.ship, 640, 1.6); }
+    if (singing(t) && whaleRingT > 0.7) { whaleRingT = 0; spawn(wp.x + 20, wp.y + 4, C.whale, 380, 1.3); }
+    for (let i = live.length - 1; i >= 0; i--) {
+      const o = live[i]; o.r += dt * 120;
+      const a = 1 - o.r / o.maxR;
+      if (a <= 0) { o.c.remove(); live.splice(i, 1); continue; }
+      o.c.setAttribute("r", o.r.toFixed(1)); o.c.setAttribute("opacity", (a * 0.75).toFixed(3));
+    }
+    acc += dt;
+    while (acc > 0.12) {
+      acc -= 0.12;
+      const { col, d } = column(t);
+      const cw = 3;
+      const dpr = roll.width / rw;
+      rollCtx.save(); rollCtx.setTransform(1, 0, 0, 1, 0, 0);
+      rollCtx.drawImage(roll, cw * dpr, 0, roll.width - cw * dpr, roll.height, 0, 0, roll.width - cw * dpr, roll.height);
+      rollCtx.restore();
+      const bh = rh / NB;
+      col.forEach((db, b) => { rollCtx.fillStyle = rgb(SEA((db - 64) / 36)); rollCtx.fillRect(rw - cw, rh - (b + 1) * bh, cw, bh + 0.5); });
+      glow.setAttribute("opacity", clamp(1.1 - d / 2.2, 0, 1).toFixed(2));
+      glow.setAttribute("r", (14 + 8 * clamp(1.1 - d / 2.2, 0, 1)).toFixed(1));
+    }
+    requestAnimationFrame(frame);
+  }
+  t = 60;
+  ship.setAttribute("transform", `translate(${shipX(t)} 146)`);
+  const wp0 = whalePos(t); whale.setAttribute("transform", `translate(${wp0.x} ${wp0.y}) scale(.62)`);
+  // prefill the strip so it never starts empty
+  for (let k = 0; k < Math.ceil(rw / 3); k++) {
+    const { col } = column(t - (rw / 3 - k) * 0.12);
+    col.forEach((db, b) => { rollCtx.fillStyle = rgb(SEA((db - 64) / 36)); rollCtx.fillRect(k * 3, rh - (b + 1) * rh / NB, 3, rh / NB + 0.5); });
+  }
+  if (!reduced) onView($("#scene"), () => { if (!running) { running = true; last = performance.now(); requestAnimationFrame(frame); } }, () => { running = false; });
+})();
+
+/* ---------------- CH1: spectrum by source ---------------- */
+(function ch1() {
+  const svg = $("#spec");
+  const srcs = [
+    { k: "wind", name: "Wind & waves", f: b => SRC.wind(b, 0.4), on: true },
+    { k: "shrimp", name: "Snapping shrimp", f: SRC.shrimp, on: true },
+    { k: "whale", name: "Whale song", f: SRC.whale, on: true },
+    { k: "ship", name: "Ship", f: b => SRC.ship(b) + spread(2), on: true },
+  ];
+  const lo = 45, hi = 100;
+  const cur = srcs.map(() => 1);
+  const totalAt = b => toDb(srcs.reduce((acc, s, i) => acc + cur[i] * lin(s.f(b)), 0) + 1e-3);
+  let render = () => {};
+  responsive(svg, W => {
+    const narrow = W < 520;
+    const H = narrow ? 290 : 340, L = narrow ? 34 : 54, R = narrow ? 102 : 118, T = 14, B = 40, fs = narrow ? 11 : 12;
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    const pw = W - L - R, ph = H - T - B;
+    const x = b => L + (b / (NB - 1)) * pw, y = db => T + ph - ((clamp(db, lo, hi) - lo) / (hi - lo)) * ph;
+    for (let d = 50; d <= 100; d += 10) {
+      el("line", { x1: L, x2: L + pw, y1: y(d), y2: y(d), stroke: C.rule }, svg);
+      txt(svg, L - 7, y(d) + 4, d + (d === 100 && !narrow ? " dB" : ""), { "text-anchor": "end", fill: C.muted, "font-size": 11 });
+    }
+    (narrow ? [0, 8, 16, 24] : [0, 4, 8, 12, 16, 20, 24]).forEach(b => txt(svg, x(b), T + ph + 18, fmtHz(HZ[b]), { "text-anchor": "middle", fill: C.muted, "font-size": 11 }));
+    txt(svg, L, T + ph + 36, "← low pitch", { fill: C.ink2, "font-size": 11 });
+    txt(svg, L + pw, T + ph + 36, "high pitch →", { "text-anchor": "end", fill: C.ink2, "font-size": 11 });
+    el("clipPath", { id: "specClip" }, svg).appendChild(el("rect", { x: L, y: T - 4, width: pw, height: ph + 4 }));
+    const areas = el("g", { "clip-path": "url(#specClip)" }, svg);
+    const guide = el("line", { y1: T, y2: T + ph, stroke: C.ink2, "stroke-dasharray": "3 3", opacity: 0 }, svg);
+    const lines = el("g", { "clip-path": "url(#specClip)" }, svg);
+    const total = el("path", { fill: "none", stroke: C.ink, "stroke-width": 2.5, "stroke-linejoin": "round" }, svg);
+    const labels = el("g", {}, svg);
+    const mkLab = (name, color, bold) => {
+      const g = el("g", {}, labels);
+      el("line", { stroke: color, "stroke-width": 1, opacity: .6 }, g);
+      txt(g, 0, 0, name, { "font-size": fs, "font-weight": bold ? 700 : 600, fill: bold ? C.ink : C.ink2 });
+      return g;
+    };
+    srcs.forEach(s => {
+      s.area = el("path", { fill: C[s.k] }, areas);
+      s.line = el("path", { fill: "none", stroke: C[s.k], "stroke-width": 2, "stroke-linejoin": "round" }, lines);
+      s.lab = mkLab(s.name, C[s.k]);
+    });
+    const totalLab = mkLab("Total heard", C.ink, true);
+    const path = f => Array.from({ length: NB }, (_, b) => `${b ? "L" : "M"}${x(b).toFixed(1)} ${y(f(b)).toFixed(1)}`).join(" ");
+    function placeLabels(items) {
+      const vis = items.filter(it => it.a > 0.02).sort((p, q) => p.y - q.y);
+      vis.forEach((v, i) => v.ly = i ? Math.max(v.y, vis[i - 1].ly + 15) : v.y);
+      const over = vis.length ? vis[vis.length - 1].ly - (T + ph) : 0;
+      if (over > 0) vis.forEach(v => v.ly -= over);
+      items.forEach(it => {
+        const ln = it.g.querySelector("line"), tx = it.g.querySelector("text"), ly = it.ly ?? it.y;
+        it.g.setAttribute("opacity", it.a);
+        ln.setAttribute("x1", x(NB - 1) + 2); ln.setAttribute("y1", it.y); ln.setAttribute("x2", x(NB - 1) + 9); ln.setAttribute("y2", ly);
+        tx.setAttribute("x", x(NB - 1) + 12); tx.setAttribute("y", ly + 4);
+      });
+    }
+    render = () => {
+      const items = [];
+      srcs.forEach((s, i) => {
+        const a = cur[i], fd = b => s.f(b) - (1 - a) * 60;
+        s.line.setAttribute("d", path(fd)); s.line.setAttribute("opacity", a);
+        s.area.setAttribute("d", path(fd) + ` L${x(NB - 1)} ${y(lo)} L${x(0)} ${y(lo)} Z`); s.area.setAttribute("opacity", 0.11 * a);
+        items.push({ g: s.lab, y: y(Math.max(s.f(NB - 1), lo)), a });
+      });
+      total.setAttribute("d", path(totalAt));
+      items.push({ g: totalLab, y: y(totalAt(NB - 1)), a: 1 });
+      placeLabels(items);
+    };
+    render();
+    const hit = el("rect", { x: L, y: T, width: pw, height: ph, fill: "transparent" }, svg);
+    hit.addEventListener("pointermove", e => {
+      const b = clamp(Math.round(((svgPoint(svg, e).x - L) / pw) * (NB - 1)), 0, NB - 1);
+      guide.setAttribute("x1", x(b)); guide.setAttribute("x2", x(b)); guide.setAttribute("opacity", 1);
+      const rows = srcs.filter((s, i) => cur[i] > 0.5).map(s => `<span style="color:${C[s.k]}">●</span> ${s.name} <b>${Math.max(0, s.f(b)).toFixed(0)} dB</b>`);
+      showTip(e.clientX, e.clientY, `<b>${fmtHz(HZ[b])}</b><br>${rows.join("<br>")}<br><span class="k">Total</span> <b>${Math.max(0, totalAt(b)).toFixed(0)} dB</b>`);
+    });
+    hit.addEventListener("pointerleave", () => { hideTip(); guide.setAttribute("opacity", 0); });
+  });
+  const chips = $("#srcChips");
+  srcs.forEach((s, i) => {
+    const b = document.createElement("button");
+    b.className = "chip"; b.style.setProperty("--c", C[s.k]); b.setAttribute("aria-pressed", "true");
+    b.innerHTML = `<span class="sw"></span>${s.name}`;
+    b.onclick = () => {
+      s.on = !s.on; b.setAttribute("aria-pressed", s.on);
+      const from = cur[i], to = s.on ? 1 : 0, t0 = performance.now();
+      const step = now => { const p = clamp((now - t0) / 450, 0, 1), e = p < .5 ? 2 * p * p : 1 - (-2 * p + 2) ** 2 / 2; cur[i] = from + (to - from) * e; render(); if (p < 1) requestAnimationFrame(step); };
+      reduced ? (cur[i] = to, render()) : requestAnimationFrame(step);
+    };
+    chips.appendChild(b);
+  });
+})();
+
+/* ---------------- CH2: grid + AIS map ---------------- */
+(function ch2() {
+  const M = 120;
+  const r = rng(7);
+  const shipA = t => ({ x: 0.2 * (t - 50), y: 1.5 });
+  const shipB = t => ({ x: -0.22 * (t - 90), y: 9 });
+  const boat = t => (t >= 92 && t <= 118) ? { x: 0.35, y: -3.2 + 0.36 * (t - 95) } : null;
+  const whaleOn = t => t >= 8 && t <= 36;
+  const data = new Float64Array(M * NB);
+  const wr = rng(3), wmask = Array.from({ length: M }, () => wr());
+  for (let t = 0; t < M; t++) {
+    const w = 0.2 + 0.4 * (t / M);
+    const a = shipA(t), bb = shipB(t), bo = boat(t);
+    const dA = Math.hypot(a.x, a.y), dB = Math.hypot(bb.x, bb.y);
+    for (let b = 0; b < NB; b++) {
+      let e = lin(SRC.wind(b, w) + gauss(r) * 1.3) + lin(SRC.shrimp(b) + gauss(r) * 2);
+      if (Math.abs(a.x) < 11) e += lin(SRC.ship(b) + spread(dA) + gauss(r) * 0.8);
+      if (Math.abs(bb.x) < 11) e += lin(SRC.ship(b) - 1 + spread(dB) + gauss(r) * 0.8);
+      if (bo) e += lin(SRC.boat(b) + spread(Math.hypot(bo.x, bo.y)) + gauss(r) * 1.2);
+      if (whaleOn(t) && wmask[t] < 0.72) e += lin(SRC.whale(b) - 3 + gauss(r) * 2 - 6 * wmask[t]);
+      data[t * NB + b] = e;
+    }
+  }
+  const events = [
+    [0, 8, "The sea at rest: <b>wind and waves</b> across the middle, <b>shrimp</b> crackling at the top."],
+    [8, 37, "<b>A humpback sings.</b> Bursts in the middle pitches, on and off. Not a ship."],
+    [37, 64, "<b>A cargo ship passes 1.5 km away.</b> Loud and low. It swells as it nears, then fades."],
+    [64, 80, "Quiet again. The wind is slowly picking up."],
+    [80, 97, "<b>A second ship, 9 km out.</b> It is on the tracking map, but barely leaves a mark."],
+    [97, 113, "<b>A small boat with no tracker.</b> Short and higher-pitched. The map never saw it."],
+    [113, 121, "Two hours, one grid. The challenge hands you windows like this, minus the answers."],
+  ];
+  const cv = $("#heat2"), cap = $("#event2"), clock = $("#clock2"), scrub = $("#scrub2"), btn = $("#play2");
+  let cur = 0, playing = false, last = 0, done = false;
+  // map
+  const svg = $("#map");
+  const S = 300, cx = 150, cy = 120, k = 12; // px per km
+  const P = p => [cx + p.x * k, cy + p.y * k];
+  el("clipPath", { id: "mapClip" }, svg).appendChild(el("rect", { width: S, height: S, rx: 4 }));
+  const wg = el("g", { filter: "url(#wc)", "clip-path": "url(#mapClip)" }, svg);
+  el("rect", { x: -30, y: -30, width: S + 60, height: S + 60, fill: "#BCD6D8" }, wg);
+  el("path", { d: "M-30 -30 L330 -30 L330 30 C 260 48 220 30 180 52 C 150 70 110 58 80 70 C 50 82 20 64 -30 80Z", fill: "#E2D3A8" }, wg);
+  const land = el("text", { x: 16, y: 26, "font-family": "Libre Franklin", "font-size": 11, "font-weight": 600, fill: "#6B5B33", "letter-spacing": ".1em" }, svg); land.textContent = "COAST";
+  [2, 5, 10].forEach(km => {
+    el("circle", { cx, cy, r: km * k, fill: "none", stroke: "#2B5672", "stroke-opacity": .35, "stroke-dasharray": "2 4" }, svg);
+    const tx = el("text", { x: cx + km * k * .71 + 3, y: cy + km * k * .71 + 10, "font-family": "Libre Franklin", "font-size": 10, fill: "#2B5672", opacity: .8 }, svg); tx.textContent = km + " km";
+  });
+  el("circle", { cx, cy, r: 5, fill: "#E6A33A", stroke: C.ink, "stroke-width": 1.5 }, svg);
+  const hyl = el("text", { x: cx + 9, y: cy - 7, "font-family": "Libre Franklin", "font-size": 11, "font-weight": 600, fill: C.ink }, svg); hyl.textContent = "Hydrophone";
+  const pulse = el("circle", { cx, cy, r: 5, fill: "none", stroke: C.ship, "stroke-width": 2, opacity: 0 }, svg);
+  const trailA = el("path", { fill: "none", stroke: C.ink, "stroke-opacity": .35, "stroke-width": 1.2, "stroke-dasharray": "1 3" }, svg);
+  const trailB = el("path", { fill: "none", stroke: C.ink, "stroke-opacity": .35, "stroke-width": 1.2, "stroke-dasharray": "1 3" }, svg);
+  const mk = (solid) => {
+    const g = el("g", {}, svg);
+    el("path", { d: "M-7 -4 L7 0 L-7 4 Z", fill: solid ? C.ink : "none", stroke: C.ink, "stroke-width": 1.4, "stroke-dasharray": solid ? "" : "2 2" }, g);
+    const t = el("text", { x: 9, y: 17, "font-family": "Libre Franklin", "font-size": 10.5, "font-weight": 600, fill: C.ink, stroke: "#C9DEDF", "stroke-width": 3, "paint-order": "stroke" }, g);
+    return { g, t };
+  };
+  const mA = mk(true), mB = mk(true), mBo = mk(false);
+  function trail(fn, upto) { let d = ""; for (let t = 0; t <= upto; t++) { const p = fn(t); if (!p) continue; const [x, y] = P(p); if (x < -10 || x > S + 10) continue; d += (d ? "L" : "M") + x.toFixed(1) + " " + y.toFixed(1); } return d; }
+  function place(m, p, label, flip) {
+    if (!p) { m.g.setAttribute("opacity", 0); return; }
+    const [x, y] = P(p);
+    const vis = x > -8 && x < S + 8 && y > -8 && y < S + 8;
+    m.g.setAttribute("opacity", vis ? 1 : 0);
+    m.g.setAttribute("transform", `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
+    m.g.querySelector("path").setAttribute("transform", flip ? "rotate(180)" : (flip === null ? "rotate(90)" : ""));
+    m.t.textContent = label;
+    const nearR = x > S - 130;
+    m.t.setAttribute("x", nearR ? 6 : -6); m.t.setAttribute("text-anchor", nearR ? "end" : "start");
+  }
+  function render() {
+    const t = Math.floor(cur);
+    drawHeat(cv, data, M, { axes: true, lo: 62, hi: 100, upto: t + 1, playhead: t });
+    const a = shipA(t), bb = shipB(t), bo = boat(t);
+    place(mA, a, `Cargo ship · ${Math.hypot(a.x, a.y).toFixed(1)} km`, false);
+    place(mB, bb, `Ship (AIS) · ${Math.hypot(bb.x, bb.y).toFixed(1)} km`, true);
+    place(mBo, bo, "Small boat · not on AIS", null);
+    trailA.setAttribute("d", trail(shipA, t)); trailB.setAttribute("d", trail(shipB, t));
+    const lev = Math.max(clamp(1 - Math.hypot(a.x, a.y) / 4, 0, 1), bo ? clamp(1 - Math.hypot(bo.x, bo.y) / 2, 0, 1) * .8 : 0);
+    pulse.setAttribute("opacity", lev.toFixed(2)); pulse.setAttribute("r", (6 + lev * 14).toFixed(1));
+    clock.textContent = `minute ${t + 1} of ${M}`;
+    scrub.value = t;
+    const ev = events.find(e => t >= e[0] && t < e[1]);
+    if (ev && cap._t !== ev[2]) { cap._t = ev[2]; cap.innerHTML = ev[2]; cap.style.borderColor = /humpback/.test(ev[2]) ? C.whale : (/ship|boat/.test(ev[2]) && !/^Two/.test(ev[2]) ? C.ship : C.rule); }
+  }
+  function frame(now) {
+    if (!playing) return;
+    cur += (now - last) / 1000 * 4.8; last = now;
+    if (cur >= M - 1) { cur = M - 1; setPlaying(false); done = true; }
+    render();
+    if (playing) requestAnimationFrame(frame);
+  }
+  function setPlaying(p) {
+    playing = p; btn.textContent = p ? "❚❚ Pause" : (cur >= M - 1 ? "↺ Replay" : "▶ Play");
+    if (p) { if (cur >= M - 1) cur = 0; last = performance.now(); requestAnimationFrame(frame); }
+  }
+  btn.onclick = () => setPlaying(!playing);
+  scrub.oninput = () => { setPlaying(false); cur = +scrub.value; render(); btn.textContent = "▶ Play"; };
+  heatHover(cv, () => ({ data, upto: Math.floor(cur) + 1 }), "Heard");
+  addEventListener("resize", render);
+  render();
+  onView(cv, () => { if (!done && !playing && !reduced && cur === 0) setPlaying(true); }, () => playing && setPlaying(false), "0px 0px -25% 0px");
+  if (reduced) { cur = M - 1; render(); }
+})();
+
+/* ---------------- CH3: the cocktail ---------------- */
+(function ch3() {
+  const M = 60;
+  const presets = {
+    calm: { name: "Calm night", w: () => 0.05, whale: false, seed: 21 },
+    windy: { name: "Windy afternoon", w: t => 0.85 + 0.1 * Math.sin(t / 6), whale: false, seed: 22 },
+    whales: { name: "Whale chorus", w: () => 0.3, whale: true, seed: 23 },
+  };
+  const bgs = {};
+  for (const k in presets) {
+    const p = presets[k], r = rng(p.seed), d = new Float64Array(M * NB);
+    for (let t = 0; t < M; t++) {
+      const sing = p.whale && (Math.sin(t / 2.3) + r() * .8 > .2);
+      for (let b = 0; b < NB; b++) {
+        let e = lin(SRC.wind(b, p.w(t)) + gauss(r) * 1.3) + lin(SRC.shrimp(b) + gauss(r) * 2);
+        if (sing) e += lin(SRC.whale(b) + 3 + gauss(r) * 2);
+        d[t * NB + b] = e;
+      }
+    }
+    bgs[k] = d;
+  }
+  const vr = rng(5), vnoise = Float64Array.from({ length: M * NB }, () => gauss(vr) * 0.8);
+  let bgKey = "calm", gain = -10, none = false;
+  const ves = new Float64Array(M * NB), mix = new Float64Array(M * NB);
+  const ca = $("#h3a"), cb = $("#h3b"), cc = $("#h3c"), out = $("#share3"), bar = $("#sharebar3");
+  let shown = 0, anim = null;
+  function compute() {
+    const bg = bgs[bgKey];
+    let sv = 0, sm = 0;
+    for (let t = 0; t < M; t++) {
+      const d = Math.hypot(1.0, 0.25 * (t - 30));
+      for (let b = 0; b < NB; b++) {
+        const i = t * NB + b;
+        ves[i] = none ? 0 : lin(SRC.ship(b) + spread(d) + gain + vnoise[i]);
+        mix[i] = bg[i] + ves[i];
+        sv += ves[i]; sm += mix[i];
+      }
+    }
+    return sv / sm;
+  }
+  function render() {
+    const s = compute();
+    drawHeat(ca, bgs[bgKey], M, { lo: 62, hi: 100 });
+    drawHeat(cb, ves, M, { lo: 62, hi: 100, ramp: RUST });
+    drawHeat(cc, mix, M, { lo: 62, hi: 100 });
+    bar.style.width = (s * 100).toFixed(1) + "%";
+    cancelAnimationFrame(anim);
+    const from = shown, t0 = performance.now();
+    const step = now => { const p = reduced ? 1 : clamp((now - t0) / 350, 0, 1); shown = from + (s - from) * (1 - (1 - p) ** 3); out.textContent = shown.toFixed(2); if (p < 1) anim = requestAnimationFrame(step); };
+    anim = requestAnimationFrame(step);
+  }
+  const chips = $("#bgChips");
+  for (const k in presets) {
+    const b = document.createElement("button");
+    b.className = "chip solo" + (k === bgKey ? " on" : ""); b.textContent = presets[k].name; b.setAttribute("aria-pressed", k === bgKey);
+    b.onclick = () => { bgKey = k; chips.querySelectorAll("button").forEach(x => { x.classList.toggle("on", x === b); x.setAttribute("aria-pressed", x === b); }); render(); };
+    chips.appendChild(b);
+  }
+  $("#gain3").oninput = e => { gain = +e.target.value; if (none) { none = false; $("#none3").classList.remove("on"); $("#none3").setAttribute("aria-pressed", false); } render(); };
+  $("#none3").onclick = e => { none = !none; e.currentTarget.classList.toggle("on", none); e.currentTarget.setAttribute("aria-pressed", none); render(); };
+  heatHover(ca, () => ({ data: bgs[bgKey] }), "Background");
+  heatHover(cb, () => ({ data: ves }), "Added ship");
+  heatHover(cc, () => ({ data: mix }), "Mixed");
+  addEventListener("resize", render);
+  render();
+})();
+
+/* ---------------- CH4: waffle + S-curve ---------------- */
+(function ch4() {
+  const wsvg = $("#waffle");
+  const cells = [];
+  for (let i = 0; i < 100; i++) {
+    const r = Math.floor(i / 10), c = i % 10;
+    cells.push(el("rect", { x: c * 22 + 1, y: (9 - r) * 22 + 1, width: 20, height: 20, rx: 3, fill: "#C7D8D8" }, wsvg));
+  }
+  const svg = $("#curve");
+  const lo = -30, hi = 20;
+  const share = d => 1 / (1 + Math.pow(10, -d / 10));
+  const inp = $("#db4"), rd = $("#db4r"), stat = $("#stat4");
+  const words = s => { const n = Math.round(s * 100); return n === 0 ? "Less than 1 unit in 100 is the ship." : `${n} of every 100 units ${n === 1 ? "is" : "are"} the ship.`; };
+  let v = -6, place = () => {};
+  function set(nv) {
+    v = clamp(Math.round(nv), lo, hi);
+    const s = share(v);
+    place(v, s);
+    inp.value = v; rd.textContent = (v > 0 ? "+" : "") + v + " dB";
+    const n = Math.round(s * 100);
+    cells.forEach((c, i) => c.setAttribute("fill", i < n ? C.ship : "#C7D8D8"));
+    stat.firstChild.nodeValue = s.toFixed(2);
+    $("#stat4s").textContent = words(s);
+  }
+  responsive(svg, W => {
+    const narrow = W < 520;
+    const H = narrow ? 290 : 360, L = narrow ? 38 : 50, R = narrow ? 10 : 20, T = 20, B = 46;
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    const pw = W - L - R, ph = H - T - B;
+    const x = d => L + ((d - lo) / (hi - lo)) * pw, y = s => T + ph - s * ph;
+    for (let s = 0; s <= 1.001; s += 0.25) {
+      el("line", { x1: L, x2: L + pw, y1: y(s), y2: y(s), stroke: C.rule }, svg);
+      txt(svg, L - 7, y(s) + 4, s.toFixed(2), { "text-anchor": "end", fill: C.muted, "font-size": 11 });
+    }
+    for (let d = -30; d <= 20; d += 10) txt(svg, x(d), T + ph + 18, (d > 0 ? "+" : "") + d + (narrow ? "" : " dB"), { "text-anchor": "middle", fill: C.muted, "font-size": 11 });
+    txt(svg, L + pw / 2, T + ph + 38, narrow ? "ship quieter  ←  dB  →  ship louder" : "ship quieter than background  ←  equal  →  ship louder", { "text-anchor": "middle", fill: C.ink2 });
+    el("line", { x1: x(0), x2: x(0), y1: T, y2: T + ph, stroke: C.muted, "stroke-dasharray": "3 4" }, svg);
+    let d = "";
+    for (let q = lo; q <= hi; q += 0.5) d += (d ? "L" : "M") + x(q).toFixed(1) + " " + y(share(q)).toFixed(1);
+    el("path", { d, fill: "none", stroke: C.sea, "stroke-width": 2.5 }, svg);
+    [[-10, narrow ? "-10 dB: 9%" : "10 dB quieter: 9%"], [10, narrow ? "+10 dB: 91%" : "10 dB louder: 91%"]].forEach(([q, lab]) => {
+      el("circle", { cx: x(q), cy: y(share(q)), r: 3.5, fill: C.paper, stroke: C.sea, "stroke-width": 1.5 }, svg);
+      const right = q > 0;
+      txt(svg, right ? (narrow ? L + pw : x(q) + 12) : x(q) - 10, y(share(q)) + (right ? (narrow ? 22 : 16) : -8), lab, { "text-anchor": right && !narrow ? "start" : "end", fill: C.ink2, "font-size": 11.5 });
+    });
+    const vline = el("line", { stroke: C.ship, "stroke-width": 1.2, "stroke-dasharray": "2 3" }, svg);
+    const hline = el("line", { stroke: C.ship, "stroke-width": 1.2, "stroke-dasharray": "2 3" }, svg);
+    const knob = el("circle", { r: 9, fill: C.ship, stroke: C.paper, "stroke-width": 3, style: "cursor:grab" }, svg);
+    place = (q, s) => {
+      knob.setAttribute("cx", x(q)); knob.setAttribute("cy", y(s));
+      vline.setAttribute("x1", x(q)); vline.setAttribute("x2", x(q)); vline.setAttribute("y1", y(s)); vline.setAttribute("y2", T + ph);
+      hline.setAttribute("x1", L); hline.setAttribute("x2", x(q)); hline.setAttribute("y1", y(s)); hline.setAttribute("y2", y(s));
+    };
+    svg._toV = e => lo + ((svgPoint(svg, e).x - L) / pw) * (hi - lo);
+    set(v);
+  });
+  inp.oninput = () => set(+inp.value);
+  let drag = false;
+  svg.addEventListener("pointerdown", e => { drag = true; svg.setPointerCapture(e.pointerId); set(svg._toV(e)); });
+  svg.addEventListener("pointermove", e => {
+    if (drag) set(svg._toV(e));
+    const q = clamp(Math.round(svg._toV(e)), lo, hi);
+    showTip(e.clientX, e.clientY, `Ship <b>${(q > 0 ? "+" : "") + q} dB</b> vs background<br><span class="k">Share of energy</span> <b>${share(q).toFixed(2)}</b>`);
+  });
+  svg.addEventListener("pointerup", () => drag = false);
+  svg.addEventListener("pointerleave", hideTip);
+})();
+
+/* ---------------- CH5: scoring ---------------- */
+(function ch5() {
+  const N = 90, r = rng(42);
+  const truth = [], z = [];
+  for (let i = 0; i < N; i++) {
+    truth.push(r() < 0.3 ? 0 : 1 / (1 + Math.pow(10, -(-24 + r() * 38) / 10)));
+    z.push(gauss(r));
+  }
+  const mean = truth.reduce((a, b) => a + b, 0) / N;
+  const rmse = p => Math.sqrt(p.reduce((a, v, i) => a + (v - truth[i]) ** 2, 0) / N);
+  const noisy = s => truth.map((t, i) => clamp(t + s * z[i], 0, 1));
+  let blo = 0, bhi = 1.5;
+  for (let k = 0; k < 40; k++) { const m = (blo + bhi) / 2; rmse(noisy(m)) < 0.246 ? blo = m : bhi = m; }
+  const benchSigma = blo;
+  const svg = $("#scatter");
+  let shownPred = truth.map(() => mean), pred = shownPred, anim, drawDots = () => {};
+  responsive(svg, W => {
+    const narrow = W < 520;
+    const H = Math.round(clamp(W * 0.78, 300, 430)), L = narrow ? 44 : 64, R = 12, T = 26, B = 46;
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    const pw = W - L - R, ph = H - T - B;
+    const x = v => L + v * pw, y = v => T + ph - v * ph;
+    for (let s = 0; s <= 1.001; s += 0.25) {
+      el("line", { x1: L, x2: L + pw, y1: y(s), y2: y(s), stroke: C.rule }, svg);
+      el("line", { x1: x(s), x2: x(s), y1: T, y2: T + ph, stroke: C.rule }, svg);
+      txt(svg, L - 7, y(s) + 4, s.toFixed(2), { "text-anchor": "end", fill: C.muted, "font-size": 11 });
+      txt(svg, x(s), T + ph + 18, s.toFixed(2), { "text-anchor": "middle", fill: C.muted, "font-size": 11 });
+    }
+    txt(svg, L + pw / 2, T + ph + 38, "True share (hidden from you)", { "text-anchor": "middle", fill: C.ink2 });
+    txt(svg, 12, T + ph / 2, "Your guess", { transform: `rotate(-90 12 ${T + ph / 2})`, "text-anchor": "middle", fill: C.ink2 });
+    el("line", { x1: x(0), y1: y(0), x2: x(1), y2: y(1), stroke: C.ink, "stroke-width": 1.5 }, svg);
+    txt(svg, x(1), y(1) - 9, "perfect guesses sit on this line ↘", { "text-anchor": "end", "font-weight": 600, fill: C.ink, "font-size": 11.5 });
+    txt(svg, x(0) + 12, y(0.62), "← hollow dots: no ship added", { fill: C.ink2, "font-size": 11.5 });
+    const misses = el("g", {}, svg), dots = el("g", {}, svg);
+    const ms = truth.map(() => el("line", { stroke: C.ship, "stroke-opacity": .35 }, misses));
+    const ds = truth.map(t => el("circle", { r: narrow ? 4.5 : 5, fill: t === 0 ? C.paper : C.sea, stroke: t === 0 ? C.sea : C.paper, "stroke-width": t === 0 ? 1.6 : 1.5 }, dots));
+    drawDots = p => p.forEach((v, i) => {
+      ds[i].setAttribute("cx", x(truth[i]).toFixed(1)); ds[i].setAttribute("cy", y(v).toFixed(1));
+      ms[i].setAttribute("x1", x(truth[i]).toFixed(1)); ms[i].setAttribute("x2", x(truth[i]).toFixed(1));
+      ms[i].setAttribute("y1", y(truth[i]).toFixed(1)); ms[i].setAttribute("y2", y(v).toFixed(1));
+    });
+    dots.addEventListener("pointermove", e => {
+      const i = ds.indexOf(e.target); if (i < 0) return;
+      showTip(e.clientX, e.clientY, `<span class="k">True share</span> <b>${truth[i].toFixed(2)}</b><br><span class="k">Your guess</span> <b>${shownPred[i].toFixed(2)}</b><br><span class="k">Miss</span> ${Math.abs(shownPred[i] - truth[i]).toFixed(2)}`);
+    });
+    dots.addEventListener("pointerleave", hideTip);
+    drawDots(shownPred);
+  });
+  const g = $("#gauge");
+  const gx = v => 10 + ((v - 0.5) / 0.5) * 240;
+  el("line", { x1: gx(0.5), x2: gx(1), y1: 50, y2: 50, stroke: C.rule, "stroke-width": 6, "stroke-linecap": "round" }, g);
+  [0.5, 0.75, 1].forEach(v => txt(g, gx(v), 74, v.toFixed(2), { "text-anchor": v === 0.5 ? "start" : v === 1 ? "end" : "middle", "font-size": 10.5, fill: C.muted }));
+  const refs = [["Always 0", 1 - rmse(truth.map(() => 0)), true], ["Average", 1 - rmse(truth.map(() => mean)), false], ["Benchmark 0.754", 0.754, true]];
+  refs.forEach(([lab, v, up]) => {
+    el("line", { x1: gx(v), x2: gx(v), y1: 42, y2: 58, stroke: C.ink2, "stroke-width": 1.5 }, g);
+    txt(g, gx(v), up ? 34 : 90, lab, { "text-anchor": "middle", "font-size": 10.5, fill: C.ink2, "font-weight": lab.startsWith("Bench") ? 700 : 500 });
+  });
+  const you = el("circle", { cy: 50, r: 7, fill: C.ship, stroke: C.paper, "stroke-width": 2.5 }, g);
+  const youT = txt(g, 0, 90, "You", { "text-anchor": "middle", "font-size": 10.5, "font-weight": 700, fill: C.ship });
+  const numEl = $("#score5"), subEl = $("#score5s"), err = $("#err5");
+  function draw(p) {
+    drawDots(p);
+    const e = rmse(p), s = 1 - e;
+    numEl.textContent = s.toFixed(3);
+    numEl.style.color = s >= 0.754 ? C.sea : C.ship;
+    subEl.innerHTML = `Typical miss: <b>${e.toFixed(3)}</b><br>${s >= 0.754 ? "Beats the benchmark." : "Below the benchmark."}`;
+    const yx = gx(clamp(s, 0.5, 1));
+    you.setAttribute("cx", yx.toFixed(1));
+    youT.setAttribute("x", yx.toFixed(1)); youT.setAttribute("opacity", Math.abs(yx - gx(refs[1][1])) < 34 ? 0 : 1);
+  }
+  function go(target) {
+    pred = target;
+    cancelAnimationFrame(anim);
+    const from = shownPred.slice(), t0 = performance.now();
+    const step = now => { const k = reduced ? 1 : clamp((now - t0) / 500, 0, 1), e = 1 - (1 - k) ** 3; shownPred = from.map((v, i) => v + (pred[i] - v) * e); draw(shownPred); if (k < 1) anim = requestAnimationFrame(step); };
+    anim = requestAnimationFrame(step);
+  }
+  const btns = document.querySelectorAll("#c5 [data-mode]");
+  function setMode(m) {
+    btns.forEach(b => b.classList.toggle("on", b.dataset.mode === m));
+    if (m === "zero") go(truth.map(() => 0));
+    else if (m === "mean") go(truth.map(() => mean));
+    else if (m === "bench") { err.value = Math.round(benchSigma * 100); go(noisy(benchSigma)); }
+    else go(noisy(+err.value / 100));
+  }
+  btns.forEach(b => b.onclick = () => setMode(b.dataset.mode));
+  err.oninput = () => setMode("err");
+  draw(shownPred);
+  onView(svg, () => { if (!svg._seen) { svg._seen = true; setMode("err"); } }, null, "0px 0px -20% 0px");
+})();
+
+/* ---------------- CH6: pipeline ---------------- */
+(function ch6() {
+  const svg = $("#pipe");
+  responsive(svg, W => {
+    const tall = W < 900;
+    const box = (x, y, w, h, fill, title, sub) => {
+      el("rect", { x, y, width: w, height: h, rx: 10, fill, filter: "url(#wc)" }, svg);
+      const lines = sub ? sub.split("|") : [];
+      const top = y + h / 2 - (lines.length * 15) / 2 + 4;
+      txt(svg, x + w / 2, top, title, { "text-anchor": "middle", "font-size": 14, "font-weight": 700, fill: C.ink });
+      lines.forEach((s, i) => txt(svg, x + w / 2, top + 18 + i * 15, s, { "text-anchor": "middle", fill: C.ink2 }));
+    };
+    const link = (d, color = C.ink2) => { el("path", { d, fill: "none", stroke: C.rule, "stroke-width": 6, "stroke-linecap": "round" }, svg); el("path", { d, class: "flow", fill: "none", stroke: color, "stroke-width": 4 }, svg); };
+    const lock = (x, y) => {
+      const g = el("g", { transform: `translate(${x} ${y})` }, svg);
+      el("rect", { x: -9, y: -3, width: 18, height: 14, rx: 3, fill: C.ink }, g);
+      el("path", { d: "M-5 -3 V-8 a5 5 0 0 1 10 0 V-3", fill: "none", stroke: C.ink, "stroke-width": 2 }, g);
+    };
+    const note = (x, y, anchor) => {
+      txt(svg, x, y, "Score it on SA stations held out from training,", { "text-anchor": anchor, "font-family": "Newsreader", "font-style": "italic", "font-size": 16, fill: C.ink2 });
+      txt(svg, x, y + 20, "so the number reflects places it has never seen.", { "text-anchor": anchor, "font-family": "Newsreader", "font-style": "italic", "font-size": 16, fill: C.ink2 });
+    };
+    if (!tall) {
+      svg.setAttribute("viewBox", `0 0 1040 330`);
+      link("M190 70 C 240 70 240 130 280 130");
+      link("M190 230 C 240 230 240 150 280 150", C.ship);
+      link("M450 140 L 500 140");
+      link("M650 140 L 700 140");
+      link("M830 140 L 880 140", C.ship);
+      link("M765 252 L 765 190", C.sea);
+      box(20, 30, 170, 80, "#CFE0E1", "SA background", "real, unlabelled|SAEON · SANBI · SA URN");
+      box(20, 190, 170, 80, "#F2D2BE", "Ship recordings", "public (VTUAD)|declared on the board");
+      box(280, 90, 170, 100, "#EEE2C2", "Practice windows", "we mix them ourselves|so we know the answer");
+      box(500, 90, 150, 100, "#DCE6D6", "Features", "low-band swell|rise and fade over time");
+      box(700, 90, 130, 100, "#D6DCEA", "Model", "predicts the|ship's share");
+      box(880, 100, 140, 80, "#F6DDCD", "Submission", "one share per|test window");
+      box(686, 252, 158, 62, "#CFE0E1", "Test windows", "predict only, never learn");
+      lock(862, 276);
+      note(280, 236, "start");
+      return;
+    }
+    const cw = Math.min(W, 460), ox = (W - cw) / 2, H = 660;
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    const bw = (cw - 24) / 2, mid = ox + cw / 2;
+    const mw = (cw - 24) * 0.52, tw = cw - 24 - mw - 12;
+    const mx = ox + 6, mcx = mx + mw / 2, tx = mx + mw + 12;
+    link(`M${ox + 6 + bw / 2} 94 C ${ox + 6 + bw / 2} 124 ${mid - 20} 116 ${mid - 20} 140`);
+    link(`M${ox + 18 + bw * 1.5} 94 C ${ox + 18 + bw * 1.5} 124 ${mid + 20} 116 ${mid + 20} 140`, C.ship);
+    link(`M${mid} 226 L ${mid} 262`);
+    link(`M${mid} 348 C ${mid} 370 ${mcx} 364 ${mcx} 390`);
+    link(`M${tx} 432 L ${mx + mw} 432`, C.sea);
+    link(`M${mcx} 474 C ${mcx} 494 ${mid} 490 ${mid} 512`, C.ship);
+    box(ox + 6, 14, bw, 80, "#CFE0E1", "SA background", "real, unlabelled|SAEON · SANBI · SA URN");
+    box(ox + 18 + bw, 14, bw, 80, "#F2D2BE", "Ship recordings", "public (VTUAD)|declared on the board");
+    box(ox + cw * 0.14, 140, cw * 0.72, 86, "#EEE2C2", "Practice windows", "we mix them ourselves|so we know the answer");
+    box(ox + cw * 0.14, 262, cw * 0.72, 86, "#DCE6D6", "Features", "low-band swell|rise and fade over time");
+    box(mx, 390, mw, 84, "#D6DCEA", "Model", "predicts the|ship's share");
+    box(tx, 390, tw, 84, "#CFE0E1", "Test windows", "predict only,|never learn");
+    lock(tx + tw - 8, 384);
+    box(ox + cw * 0.14, 512, cw * 0.72, 74, "#F6DDCD", "Submission", "one share per test window");
+    note(mid, 620, "middle");
+  });
+})();
+
+/* ---------------- CH7: timeline ---------------- */
+(function ch7() {
+  const svg = $("#timeline");
+  const d0 = Date.UTC(2026, 9, 16), d1 = Date.UTC(2027, 0, 29);
+  const today = Date.UTC(2026, 9, 18), close = Date.UTC(2026, 11, 13);
+  let x = () => 0, done, seen = false;
+  const fill = p => done && done.setAttribute("x2", x(d0) + (x(today) - x(d0)) * p);
+  responsive(svg, W => {
+    const narrow = W < 600, H = narrow ? 130 : 150, yy = narrow ? 64 : 76;
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    const L = 10, R = 10;
+    x = d => L + ((d - d0) / (d1 - d0)) * (W - L - R);
+    el("line", { x1: x(d0), x2: x(d1), y1: yy, y2: yy, stroke: C.rule, "stroke-width": 8, "stroke-linecap": "round" }, svg);
+    el("line", { x1: x(d0), x2: x(close), y1: yy, y2: yy, stroke: "#B9D0D3", "stroke-width": 8, "stroke-linecap": "round" }, svg);
+    done = el("line", { x1: x(d0), x2: x(d0), y1: yy, y2: yy, stroke: C.sea, "stroke-width": 8, "stroke-linecap": "round" }, svg);
+    for (let m = 0; m < 3; m++) {
+      const d = Date.UTC(2026, 10 + m, 1);
+      el("line", { x1: x(d), x2: x(d), y1: yy + 8, y2: yy + 14, stroke: C.muted }, svg);
+      txt(svg, x(d), yy + 27, new Date(d).toLocaleString("en-GB", { month: "short", timeZone: "UTC" }) + (m === 2 && !narrow ? " 2027" : ""), { "text-anchor": "middle", "font-size": 11, fill: C.muted });
+    }
+    const fs = narrow ? 12 : 13;
+    const mark = (d, top, sub, color, up, anchor) => {
+      el("circle", { cx: x(d), cy: yy, r: 7, fill: color, stroke: C.paper, "stroke-width": 2.5 }, svg);
+      txt(svg, x(d), up ? yy - 30 : yy + (narrow ? 46 : 52), top, { "text-anchor": anchor, "font-size": fs, "font-weight": 700, fill: C.ink });
+      txt(svg, x(d), up ? yy - 15 : yy + (narrow ? 61 : 68), sub, { "text-anchor": anchor, "font-size": 12, fill: C.ink2 });
+    };
+    mark(d0, "Opened", "16 Oct", C.ink2, false, "start");
+    mark(today, "Today", "18 Oct", C.ship, true, "start");
+    mark(close, narrow ? "Close" : "Submissions close", narrow ? "13 Dec" : "13 Dec, 11:30 UTC", C.sea, true, "middle");
+    mark(d1, narrow ? "Final ranks" : "Final ranks revealed", "29 Jan 2027", C.ink2, false, "end");
+    if (!narrow) txt(svg, (x(today) + x(close)) / 2, yy + 52, "8 weeks · 10 submissions a day · pick 2 for the final", { "text-anchor": "middle", "font-family": "Newsreader", "font-style": "italic", "font-size": 16, fill: C.sea });
+    if (seen) fill(1);
+  });
+  onView(svg, () => {
+    if (seen) return; seen = true;
+    const t0 = performance.now();
+    const step = now => { const p = reduced ? 1 : clamp((now - t0) / 900, 0, 1); fill(1 - (1 - p) ** 3); if (p < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  });
+})();
+})();
+
+</script>
+</body>
+</html>

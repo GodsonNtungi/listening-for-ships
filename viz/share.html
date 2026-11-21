@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What Share Means</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #F6F1E7; --paper-2: #EFE8D9; --ink: #1D2433; --ink-2: #4A5262; --muted: #7C8494; --rule: #DCD3C2;
+  --sea: #2B5672; --natural: #D99A00; --ship: #C8442A;
+  --serif: "Newsreader", Georgia, serif; --sans: "Libre Franklin", "Helvetica Neue", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --paper: #161A22; --paper-2: #1F2430; --ink: #ECE6DA; --ink-2: #B9B2A5; --muted: #8A8F9A; --rule: #2E3442; --sea: #5B8DB0; }
+}
+:root[data-theme="dark"] { --paper: #161A22; --paper-2: #1F2430; --ink: #ECE6DA; --ink-2: #B9B2A5; --muted: #8A8F9A; --rule: #2E3442; --sea: #5B8DB0; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--serif); font-size: 19px; line-height: 1.55; }
+.col { max-width: 980px; margin: 0 auto; padding: 0 16px 60px; }
+h1 { font-weight: 500; font-size: clamp(34px, 6vw, 56px); line-height: 1.05; margin: 52px 0 10px; letter-spacing: -.02em; }
+.dek { color: var(--ink-2); margin: 0 0 30px; max-width: 680px; }
+.lab { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; border-top: 1px solid var(--rule); padding-top: 26px; }
+@media (max-width: 760px) { .lab { grid-template-columns: 1fr; } }
+canvas { width: 100%; aspect-ratio: 15 / 12; display: block; border-radius: 6px; background: var(--paper-2); }
+.axis { font-family: var(--sans); font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; margin-top: 6px; }
+.key { font-family: var(--sans); font-size: 13px; color: var(--ink-2); display: flex; gap: 16px; flex-wrap: wrap; margin-top: 8px; }
+.dot { width: 10px; height: 10px; border-radius: 2px; display: inline-block; margin-right: 6px; vertical-align: -1px; }
+.ctl { font-family: var(--sans); margin-bottom: 18px; }
+.ctl label { display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; }
+.ctl label span { font-weight: 500; color: var(--ink-2); }
+.ctl small { display: block; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+input[type=range] { width: 100%; accent-color: var(--ship); margin: 6px 0 0; }
+#natCtl input[type=range] { accent-color: var(--natural); }
+.ctl label.toggle { justify-content: flex-start; } .toggle { font-family: var(--sans); font-size: 14px; font-weight: 600; display: flex; gap: 8px; align-items: center; cursor: pointer; margin-bottom: 6px; }
+.big { font-family: var(--sans); font-size: 64px; font-weight: 700; line-height: 1; color: var(--ship); letter-spacing: -.02em; }
+.bigl { font-family: var(--sans); font-size: 13px; color: var(--muted); margin-bottom: 14px; }
+.bar { display: flex; height: 34px; border-radius: 6px; overflow: hidden; border: 1px solid var(--rule); }
+.bar div { transition: width .15s; }
+.rows { font-family: var(--sans); font-size: 14px; margin: 10px 0 0; }
+.rows div { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--rule); }
+.rows b { font-weight: 600; }
+.formula { font-family: var(--sans); font-size: 15px; background: var(--paper-2); border-radius: 6px; padding: 12px 14px; margin-top: 16px; }
+.formula .r { color: var(--ship); font-weight: 700; }
+.lesson { border-top: 1px solid var(--rule); margin-top: 34px; padding-top: 22px; }
+.lesson h2 { font-weight: 500; font-size: 27px; margin: 0 0 8px; }
+.lesson p { color: var(--ink-2); margin: 0 0 12px; max-width: 700px; }
+.presets { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 20px; }
+.presets button { font: 600 13px var(--sans); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--rule); background: var(--paper-2); color: var(--ink); cursor: pointer; }
+.presets button:hover { border-color: var(--ink-2); }
+table { font-family: var(--sans); font-size: 14px; border-collapse: collapse; width: 100%; max-width: 560px; }
+td, th { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--rule); }
+th { color: var(--muted); font-weight: 500; }
+tr.on td { background: var(--paper-2); font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="col">
+  <h1>What "share" means</h1>
+  <p class="dek">Share is the part of all the sound energy in the 15 minutes that came from the added ship. Move the sliders and watch the answer change.</p>
+
+  <div class="lab">
+    <div>
+      <canvas id="grid"></canvas>
+      <div class="axis"><span>minute 1</span><span>time →</span><span>minute 15</span></div>
+      <div class="key">
+        <span><i class="dot" style="background:var(--sea)"></i>mostly sea</span>
+        <span><i class="dot" style="background:var(--ship)"></i>mostly added ship</span>
+        <span><i class="dot" style="background:var(--natural)"></i>mostly ship that doesn't count</span>
+      </div>
+      <p class="key" style="margin-top:4px">Bottom row is the lowest pitch (32 Hz), top row the highest (7.9 kHz). Brighter means louder.</p>
+    </div>
+
+    <div>
+      <div class="big" id="share">0%</div>
+      <div class="bigl">the answer for this window (share)</div>
+      <div class="bar"><div id="bSea" style="background:var(--sea)"></div><div id="bNat" style="background:var(--natural)"></div><div id="bShip" style="background:var(--ship)"></div></div>
+      <div class="rows">
+        <div><span><i class="dot" style="background:var(--sea)"></i>Sea energy</span><b id="eSea"></b></div>
+        <div><span><i class="dot" style="background:var(--natural)"></i>Ship that doesn't count</span><b id="eNat"></b></div>
+        <div><span><i class="dot" style="background:var(--ship)"></i>Added ship</span><b id="eShip"></b></div>
+      </div>
+      <div class="formula" id="formula"></div>
+
+      <div class="ctl" style="margin-top:22px">
+        <label>Added ship loudness <span id="vShip"></span></label>
+        <input id="ship" type="range" min="-40" max="15" step="1" value="0">
+        <small>Compared with the sea, over the whole window.</small>
+      </div>
+      <div class="ctl">
+        <label>Closest minute <span id="vMin"></span></label>
+        <input id="min" type="range" min="1" max="15" step="1" value="6">
+      </div>
+      <div class="ctl" id="natCtl">
+        <label class="toggle"><input id="natOn" type="checkbox"> Add a ship that doesn't count</label>
+        <label>Its loudness <span id="vNat"></span></label>
+        <input id="nat" type="range" min="-30" max="15" step="1" value="0">
+        <small>Already in the South African recording, so it counts as sea.</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="lesson">
+    <h2>Try these</h2>
+    <div class="presets">
+      <button data-p="-40,0,0">No ship to speak of</button>
+      <button data-p="-10,0,0">Ship 10 dB quieter</button>
+      <button data-p="0,0,0">Ship as loud as sea</button>
+      <button data-p="10,0,0">Ship 10 dB louder</button>
+      <button data-p="0,1,0">Same ship, plus an equally loud one that doesn't count</button>
+      <button data-p="-40,1,3">Trap: only a ship that doesn't count</button>
+    </div>
+    <p><b>Lesson 1. Share is about energy, not dB.</b> Every 10 dB is 10 times the energy. So a ship 10 dB quieter than the sea is only 9%, and a ship 10 dB louder is 91%. Small dB changes near "equal" move the share a lot.</p>
+    <table id="tbl"><tr><th>Ship vs sea</th><th>Ship energy vs sea</th><th>Share</th></tr></table>
+    <p style="margin-top:16px"><b>Lesson 2. A ship that doesn't count still makes the total bigger.</b> It goes in the bottom of the fraction only. Add one as loud as the sea and the same added ship drops from 50% to 33%.</p>
+    <p><b>Lesson 3. The trap.</b> With only a ship that doesn't count, the grid shows a clear ship, but the answer is 0%. This is where our model loses points: it sees "a ship" and guesses in between.</p>
+  </div>
+</div>
+<script>
+const T = 15, B = 25;
+let seed = 7;
+const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const sea = Array.from({ length: T }, () => Array.from({ length: B }, (_, b) => 10 ** ((72 - 0.45 * b + (rnd() - 0.5) * 3) / 10)));
+const seaTotal = sea.flat().reduce((a, v) => a + v, 0);
+
+function pass(t0, width, tiltDb, energy) {  // swell and fade in time, louder at low pitch
+  const P = Array.from({ length: T }, (_, t) => Array.from({ length: B }, (_, b) =>
+    10 ** (-tiltDb * b / 24 / 10) / (1 + ((t + 1 - t0) / width) ** 2)));
+  const s = P.flat().reduce((a, v) => a + v, 0);
+  return P.map(r => r.map(v => v * energy / s));
+}
+
+const $ = id => document.getElementById(id);
+const fmt = x => x >= 10 ? x.toFixed(0) : x >= 0.1 ? x.toFixed(2) : x.toFixed(3);
+const pct = x => x < 0.001 ? "0%" : x < 0.01 ? (x * 100).toFixed(1) + "%" : (x * 100).toFixed(0) + "%";
+
+function render() {
+  const sDb = +$("ship").value, nOn = $("natOn").checked, nDb = +$("nat").value, m = +$("min").value;
+  const A = pass(m, 2.2, 14, seaTotal * 10 ** (sDb / 10));
+  const N = pass(m <= 8 ? 12 : 4, 3.5, 20, nOn ? seaTotal * 10 ** (nDb / 10) : 0);
+  const eA = A.flat().reduce((a, v) => a + v, 0), eN = N.flat().reduce((a, v) => a + v, 0), tot = seaTotal + eN + eA;
+  const share = eA / tot;
+
+  $("vShip").textContent = sDb <= -40 ? "silent" : (sDb > 0 ? "+" : "") + sDb + " dB";
+  $("vMin").textContent = m;
+  $("vNat").textContent = (nDb > 0 ? "+" : "") + nDb + " dB";
+  $("nat").disabled = !nOn;
+  $("share").textContent = pct(share);
+  const u = v => fmt(v / seaTotal * 100);
+  $("eSea").textContent = u(seaTotal) + " units";
+  $("eNat").textContent = u(eN) + " units";
+  $("eShip").textContent = u(eA) + " units";
+  $("bSea").style.width = seaTotal / tot * 100 + "%";
+  $("bNat").style.width = eN / tot * 100 + "%";
+  $("bShip").style.width = eA / tot * 100 + "%";
+  $("formula").innerHTML = `share = <span class="r">added ship</span> ÷ everything = <span class="r">${u(eA)}</span> ÷ (${u(seaTotal)} + ${u(eN)} + <span class="r">${u(eA)}</span>) = <b>${pct(share)}</b>`;
+
+  const cv = $("grid"), W = cv.width = 600, H = cv.height = 480, g = cv.getContext("2d"), css = getComputedStyle(document.documentElement);
+  const col = k => css.getPropertyValue(k).trim();
+  const P = sea.map((r, t) => r.map((v, b) => v + N[t][b] + A[t][b]));
+  const max = Math.max(...P.flat()), fl = 10 * Math.log10(max) - 30;
+  g.clearRect(0, 0, W, H);
+  for (let t = 0; t < T; t++) for (let b = 0; b < B; b++) {
+    const p = P[t][b], who = A[t][b] > p / 2 ? "--ship" : N[t][b] > p / 2 ? "--natural" : "--sea";
+    g.globalAlpha = Math.max(0.06, Math.min(1, (10 * Math.log10(p) - fl) / 30));
+    g.fillStyle = col(who);
+    g.fillRect(t * W / T + 1, H - (b + 1) * H / B + 1, W / T - 2, H / B - 2);
+  }
+  g.globalAlpha = 1;
+
+  $("tbl").querySelectorAll("tr.d").forEach(r => r.remove());
+  [-20, -10, -5, 0, 5, 10].forEach(d => {
+    const tr = document.createElement("tr"); tr.className = "d" + (d === sDb && !nOn ? " on" : "");
+    tr.innerHTML = `<td>${d > 0 ? "+" : ""}${d} dB</td><td>${fmt(10 ** (d / 10))} ×</td><td>${pct(1 / (1 + 10 ** (-d / 10)))}</td>`;
+    $("tbl").appendChild(tr);
+  });
+}
+
+["ship", "min", "nat", "natOn"].forEach(id => $(id).addEventListener("input", render));
+document.querySelectorAll(".presets button").forEach(b => b.onclick = () => {
+  const [s, on, n] = b.dataset.p.split(",").map(Number);
+  $("ship").value = s; $("natOn").checked = !!on; $("nat").value = n; render();
+});
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
+render();
+</script>
+</body>
+</html>
